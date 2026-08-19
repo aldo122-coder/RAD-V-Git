@@ -207,7 +207,7 @@ function parseGvizResponse(text) {
    GET CELL VALUE
 ========================================================= */
 
-function valueFromCell(row, index) {
+function valueFromCell(row, index, formatted = false) {
 
     if (
         index < 0 ||
@@ -218,105 +218,96 @@ function valueFromCell(row, index) {
         return null;
     }
 
-    return row.c[index].v;
+    const cell = row.c[index];
+
+    if (formatted && cell.f !== undefined) {
+        return cell.f;
+    }
+
+    return cell.v;
 }
 
 
 /* =========================================================
    FORMAT TIMESTAMP
+   Hasil:
+   DD/MM/YYYY HH:mm:ss
+
+   Contoh:
+   Date(2026,2,1,15,7,44)
+   menjadi:
+   01/03/2026 15:07:44
 ========================================================= */
 
-/*
-   Google Visualization sering mengirim tanggal seperti:
-
-   Date(2026,2,1,15,7,44)
-
-   Perlu diperhatikan:
-   bulan Google dimulai dari 0.
-
-   0 = Januari
-   1 = Februari
-   2 = Maret
-   dst.
-
-   Hasil:
-
-   01 Maret 2026, 15:07:44
-*/
-
-function formatTimestamp(value) {
+function formatTimestamp(row, index) {
 
     if (
-        value === null ||
-        value === undefined ||
-        value === ""
+        !row ||
+        !row.c ||
+        index < 0 ||
+        !row.c[index]
     ) {
         return "";
     }
 
+    const cell = row.c[index];
 
-    const text =
-        String(value).trim();
+    /*
+     * Ambil nilai asli dari Google GViz.
+     *
+     * Contoh:
+     * Date(2026,2,1,15,7,44)
+     */
+    const value = cell.v;
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    const text = String(value).trim();
 
 
-    /* -----------------------------------------
-       Format Google Date(...)
-    ----------------------------------------- */
+    /* =====================================================
+       FORMAT GOOGLE GVIZ
+       
+       Date(2026,2,1,15,7,44)
+       
+       Google:
+       0 = Januari
+       1 = Februari
+       2 = Maret
+    ===================================================== */
 
-    const match =
-        text.match(
-            /^Date\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/
-        );
+    const match = text.match(
+        /^Date\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/
+    );
 
 
     if (match) {
 
-        const year =
-            Number(match[1]);
+        const year = Number(match[1]);
 
-        const month =
-            Number(match[2]);
+        const month = Number(match[2]) + 1;
 
-        const day =
-            Number(match[3]);
+        const day = Number(match[3]);
 
-        const hour =
-            Number(match[4]);
+        const hour = Number(match[4]);
 
-        const minute =
-            Number(match[5]);
+        const minute = Number(match[5]);
 
-        const second =
-            Number(match[6]);
-
-
-        const months = [
-            "Januari",
-            "Februari",
-            "Maret",
-            "April",
-            "Mei",
-            "Juni",
-            "Juli",
-            "Agustus",
-            "September",
-            "Oktober",
-            "November",
-            "Desember"
-        ];
-
-
-        const monthName =
-            months[month] || "";
+        const second = Number(match[6]);
 
 
         return (
             String(day).padStart(2, "0") +
+            "/" +
+            String(month).padStart(2, "0") +
+            "/" +
+            String(year) +
             " " +
-            monthName +
-            " " +
-            year +
-            ", " +
             String(hour).padStart(2, "0") +
             ":" +
             String(minute).padStart(2, "0") +
@@ -326,12 +317,56 @@ function formatTimestamp(value) {
     }
 
 
-    /* -----------------------------------------
-       Jika bukan format Date(...)
-    ----------------------------------------- */
+    /*
+     * Jika bukan Date(...)
+     *
+     * Coba gunakan format yang diberikan Google Sheets.
+     */
+    if (
+        cell.f !== undefined &&
+        cell.f !== null &&
+        String(cell.f).trim() !== ""
+    ) {
+
+        const formatted =
+            String(cell.f).trim();
+
+
+        /*
+         * Jika sudah DD/MM/YYYY HH:mm:ss
+         * biarkan.
+         */
+        const normalFormat =
+            formatted.match(
+                /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+            );
+
+
+        if (normalFormat) {
+
+            return (
+                String(normalFormat[1]).padStart(2, "0") +
+                "/" +
+                String(normalFormat[2]).padStart(2, "0") +
+                "/" +
+                normalFormat[3] +
+                " " +
+                String(normalFormat[4]).padStart(2, "0") +
+                ":" +
+                String(normalFormat[5]).padStart(2, "0") +
+                ":" +
+                String(normalFormat[6]).padStart(2, "0")
+            );
+        }
+
+
+        return formatted;
+    }
+
 
     return text;
 }
+
 
 
 /* =========================================================
@@ -1239,30 +1274,24 @@ function renderSpreadsheetTable(
                     .map(
                         (header, colIndex) => {
 
-                            let value =
-                                formatCellValue(
-                                    valueFromCell(
-                                        row,
-                                        colIndex
-                                    )
-                                );
+                            let value;
 
+if (colIndex === timestampIndex) {
 
-                            /* --------------------------------
-                               FORMAT TIMESTAMP
-                            -------------------------------- */
+    value = formatTimestamp(
+        row,
+        colIndex
+    );
 
-                            if (
-                                colIndex ===
-                                timestampIndex
-                            ) {
+} else {
 
-                                value =
-                                    formatTimestamp(
-                                        value
-                                    );
-                            }
-
+    value = formatCellValue(
+        valueFromCell(
+            row,
+            colIndex
+        )
+    );
+}
 
                             /* --------------------------------
                                WARNA RADIATION
