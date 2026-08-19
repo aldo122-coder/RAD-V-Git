@@ -1,33 +1,47 @@
+/* =========================================================
+   RAD-V MONITORING & CONTROL DASHBOARD
+   STYLE.CSS
+========================================================= */
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-html {
-    width: 100%;
-    min-height: 100%;
-}
+
+/* =========================================================
+   BODY
+========================================================= */
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     background: #10141c;
-    color: white;
-    width: 100%;
+    color: #ffffff;
     min-height: 100vh;
 }
+
+
+/* =========================================================
+   CONTAINER
+========================================================= */
 
 .container {
     width: 95%;
     max-width: 1000px;
-    margin: auto;
+    margin: 0 auto;
     padding: 20px 0 40px;
 }
 
 
-/* =========================================
+/* =========================================================
    HEADER
-========================================= */
+========================================================= */
 
 h1 {
     text-align: center;
@@ -42,9 +56,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    SENSOR
-========================================= */
+========================================================= */
 
 .sensor-grid {
     display: grid;
@@ -81,9 +95,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    CONTROL SECTION
-========================================= */
+========================================================= */
 
 .control-section {
     background: #1b2230;
@@ -100,9 +114,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    SWITCH
-========================================= */
+========================================================= */
 
 .switch-container {
     display: grid;
@@ -135,7 +149,7 @@ h1 {
 .switch-circle {
     width: 30px;
     height: 30px;
-    background: white;
+    background: #ffffff;
     border-radius: 50%;
     transition: 0.3s;
 }
@@ -154,9 +168,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    RAD-V CONTROL
-========================================= */
+========================================================= */
 
 .direction-control {
     width: 100%;
@@ -165,20 +179,21 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    RTB
-========================================= */
+========================================================= */
 
 .rtb-button {
     width: 100%;
     height: 65px;
+
     margin-bottom: 3px;
 
     border: none;
     border-radius: 12px 12px 0 0;
 
     background: #7c3aed;
-    color: white;
+    color: #ffffff;
 
     font-size: 20px;
     font-weight: bold;
@@ -188,7 +203,13 @@ h1 {
     touch-action: none;
     user-select: none;
 
-    transition: 0.1s;
+    transition:
+        transform 0.1s,
+        filter 0.1s;
+}
+
+.rtb-button:hover {
+    filter: brightness(1.08);
 }
 
 .rtb-button:active {
@@ -197,27 +218,29 @@ h1 {
 }
 
 
-/* =========================================
-   AREA UTAMA RC
-========================================= */
+/* =========================================================
+   RC MAIN
+========================================================= */
 
 .rc-main {
     display: grid;
     grid-template-columns: 1fr 1fr;
 
     height: 260px;
+
     gap: 3px;
 
     background: #10141c;
 
     overflow: hidden;
+
     border-radius: 0 0 12px 12px;
 }
 
 
-/* =========================================
+/* =========================================================
    KIRI + KANAN
-========================================= */
+========================================================= */
 
 .side-control {
     display: grid;
@@ -226,9 +249,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    MAJU + MUNDUR
-========================================= */
+========================================================= */
 
 .forward-control {
     display: grid;
@@ -237,9 +260,9 @@ h1 {
 }
 
 
-/* =========================================
-   BUTTON RC
-========================================= */
+/* =========================================================
+   CONTROL BUTTON
+========================================================= */
 
 .control-button {
     width: 100%;
@@ -247,7 +270,7 @@ h1 {
 
     border: none;
 
-    color: white;
+    color: #ffffff;
 
     display: flex;
     flex-direction: column;
@@ -270,10 +293,14 @@ h1 {
         filter 0.08s;
 }
 
+.control-button:hover {
+    filter: brightness(1.08);
+}
 
-/* =========================================
+
+/* =========================================================
    ARROW
-========================================= */
+========================================================= */
 
 .control-button .arrow {
     font-size: 34px;
@@ -281,9 +308,9 @@ h1 {
 }
 
 
-/* =========================================
-   WARNA BUTTON
-========================================= */
+/* =========================================================
+   CONTROL COLORS
+========================================================= */
 
 .control-button.kiri {
     background: #2563eb;
@@ -302,9 +329,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    PRESSED
-========================================= */
+========================================================= */
 
 .control-button.active {
     filter: brightness(0.7);
@@ -312,9 +339,9 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    STATUS
-========================================= */
+========================================================= */
 
 .status-card {
     background: #1b2230;
@@ -326,6 +353,7 @@ h1 {
 .status-row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 
     padding: 12px;
 
@@ -341,19 +369,63 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
+   DATA LINK
+========================================================= */
+
+.link-section {
+    background: #1b2230;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.link-button {
+    width: 100%;
+    height: 55px;
+
+    border: none;
+    border-radius: 10px;
+
+    margin-bottom: 12px;
+
+    color: #ffffff;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.1s,
+        filter 0.1s;
+}
+
+.link-button:hover {
+    filter: brightness(1.08);
+}
+
+.link-button:active {
+    transform: scale(0.98);
+}
+
+.spreadsheet {
+    background: #15803d;
+}
+
+.datastudio {
+    background: #2563eb;
+}
+
+
+/* =========================================================
    PEMETAAN RAD-V
-========================================= */
+========================================================= */
 
 .map-section {
-    width: 100%;
-
     background: #1b2230;
-
     border-radius: 15px;
-
     padding: 20px;
-
     margin-top: 20px;
 }
 
@@ -375,25 +447,31 @@ h1 {
 .map-header p {
     color: #7f8a9a;
     font-size: 13px;
+    line-height: 1.5;
 }
 
 .map-refresh {
+    flex-shrink: 0;
+
     border: none;
     border-radius: 8px;
 
     padding: 10px 15px;
 
     background: #2563eb;
-
-    color: white;
+    color: #ffffff;
 
     font-weight: bold;
 
     cursor: pointer;
+
+    transition:
+        transform 0.1s,
+        filter 0.1s;
 }
 
 .map-refresh:hover {
-    filter: brightness(1.1);
+    filter: brightness(1.08);
 }
 
 .map-refresh:active {
@@ -401,15 +479,19 @@ h1 {
 }
 
 
-/* =========================================
+/* =========================================================
    LEAFLET MAP
-========================================= */
+========================================================= */
+
+/*
+   Container utama peta.
+   Jangan memberikan position/width/height
+   secara manual kepada tile Leaflet.
+*/
 
 #radMap {
     width: 100%;
     height: 430px;
-
-    position: relative;
 
     border-radius: 12px;
 
@@ -418,91 +500,47 @@ h1 {
     border: 1px solid #2d3748;
 
     background: #dbe3ef;
-
-    z-index: 1;
 }
 
 
 /*
-   PENTING:
-   Jangan biarkan CSS global memengaruhi
-   tile gambar Leaflet.
+   Sangat penting:
+   CSS global biasanya membuat semua img:
+   max-width: 100%;
+   
+   Hal tersebut dapat merusak ukuran tile Leaflet.
 */
 
-#radMap img {
+#radMap img.leaflet-tile {
     max-width: none !important;
     max-height: none !important;
 }
 
 
-/* Container Leaflet */
+/*
+   Jangan mengatur:
+   .leaflet-tile-container
+   .leaflet-tile-pane
+   .leaflet-map-pane
+   .leaflet-marker-pane
+   secara manual.
+   
+   Semua posisi tersebut diatur oleh Leaflet.
+*/
 
-#radMap.leaflet-container {
-    position: relative;
-    overflow: hidden;
+
+/* =========================================================
+   LEAFLET FONT
+========================================================= */
+
+.leaflet-container {
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 
-/* Tile Leaflet */
-
-#radMap .leaflet-tile {
-    max-width: none !important;
-    max-height: none !important;
-}
-
-
-/* Pastikan pane Leaflet berada
-   pada posisi yang benar */
-
-#radMap .leaflet-map-pane {
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-
-#radMap .leaflet-tile-pane {
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-
-#radMap .leaflet-overlay-pane {
-    position: absolute;
-}
-
-#radMap .leaflet-marker-pane {
-    position: absolute;
-}
-
-#radMap .leaflet-shadow-pane {
-    position: absolute;
-}
-
-#radMap .leaflet-popup-pane {
-    position: absolute;
-}
-
-
-/* =========================================
-   LEAFLET CONTROL
-========================================= */
-
-#radMap .leaflet-control {
-    z-index: 1000;
-}
-
-#radMap .leaflet-control-zoom {
-    margin: 10px;
-}
-
-#radMap .leaflet-control-zoom a {
-    color: #222;
-}
-
-
-/* =========================================
-   LEGEND MAP
-========================================= */
+/* =========================================================
+   MAP LEGEND
+========================================================= */
 
 .map-legend {
     display: flex;
@@ -548,17 +586,14 @@ h1 {
 }
 
 
-/* =========================================
-   TABEL GOOGLE SPREADSHEET
-========================================= */
+/* =========================================================
+   GOOGLE SPREADSHEET TABLE
+========================================================= */
 
 .table-section {
     background: #1b2230;
-
     border-radius: 15px;
-
     padding: 20px;
-
     margin-top: 20px;
 }
 
@@ -579,6 +614,7 @@ h1 {
 .table-header p {
     color: #7f8a9a;
     font-size: 13px;
+    line-height: 1.5;
 }
 
 .table-wrapper {
@@ -604,7 +640,7 @@ h1 {
 #radiationTable th {
     background: #2563eb;
 
-    color: white;
+    color: #ffffff;
 
     padding: 12px 10px;
 
@@ -654,32 +690,29 @@ h1 {
 }
 
 
-/* =========================================
-   WARNA RADIASI
-========================================= */
+/* =========================================================
+   RADIATION COLORS
+========================================================= */
 
 .radiation-low {
     color: #22c55e !important;
-
     font-weight: bold;
 }
 
 .radiation-medium {
     color: #f59e0b !important;
-
     font-weight: bold;
 }
 
 .radiation-high {
     color: #ef4444 !important;
-
     font-weight: bold;
 }
 
 
-/* =========================================
-   TABEL KOSONG
-========================================= */
+/* =========================================================
+   TABLE EMPTY
+========================================================= */
 
 .table-empty {
     padding: 25px !important;
@@ -688,9 +721,9 @@ h1 {
 }
 
 
-/* =========================================
-   BUTTON LIHAT PETA
-========================================= */
+/* =========================================================
+   TABLE MAP BUTTON
+========================================================= */
 
 .table-map-button {
     border: none;
@@ -701,7 +734,7 @@ h1 {
 
     background: #2563eb;
 
-    color: white;
+    color: #ffffff;
 
     font-size: 11px;
 
@@ -715,52 +748,9 @@ h1 {
 }
 
 
-/* =========================================
-   DATA LINK
-========================================= */
-
-.link-section {
-    background: #1b2230;
-
-    border-radius: 15px;
-
-    padding: 20px;
-
-    margin-top: 20px;
-}
-
-.link-button {
-    width: 100%;
-
-    height: 55px;
-
-    border: none;
-
-    border-radius: 10px;
-
-    margin-bottom: 12px;
-
-    color: white;
-
-    font-size: 16px;
-
-    font-weight: bold;
-
-    cursor: pointer;
-}
-
-.spreadsheet {
-    background: #15803d;
-}
-
-.datastudio {
-    background: #2563eb;
-}
-
-
-/* =========================================
+/* =========================================================
    FOOTER
-========================================= */
+========================================================= */
 
 footer {
     text-align: center;
@@ -773,22 +763,64 @@ footer {
 }
 
 
-/* =========================================
-   RESPONSIVE - TABLET / HP
-========================================= */
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
 
-@media (max-width: 700px) {
-
-    .container {
-        width: 94%;
-    }
+@media (max-width: 850px) {
 
     .sensor-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .container {
+        width: 94%;
+    }
+
+    #radMap {
+        height: 400px;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .container {
+        width: 94%;
+        padding-top: 15px;
+    }
+
+
+    /* HEADER */
+
+    h1 {
+        font-size: 27px;
+    }
+
+
+    .subtitle {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+
+    /* SENSOR */
+
+    .sensor-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
     .card {
         padding: 15px 8px;
+    }
+
+    .card h3 {
+        font-size: 15px;
     }
 
     .value {
@@ -804,6 +836,7 @@ footer {
 
     .switch-container {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
 
 
@@ -811,11 +844,11 @@ footer {
 
     .direction-control {
         width: 100%;
+        max-width: 100%;
     }
 
     .rtb-button {
         height: 58px;
-
         font-size: 18px;
     }
 
@@ -846,6 +879,15 @@ footer {
         font-size: 20px;
     }
 
+    .map-header p {
+        font-size: 12px;
+    }
+
+    .map-refresh {
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+
     #radMap {
         height: 350px;
     }
@@ -860,12 +902,20 @@ footer {
     .table-header {
         align-items: flex-start;
     }
+
+    .table-header h2 {
+        font-size: 20px;
+    }
+
+    .table-header p {
+        font-size: 12px;
+    }
 }
 
 
-/* =========================================
+/* =========================================================
    VERY SMALL SCREEN
-========================================= */
+========================================================= */
 
 @media (max-width: 450px) {
 
@@ -877,10 +927,6 @@ footer {
         padding: 12px 5px;
     }
 
-    .card h3 {
-        font-size: 14px;
-    }
-
     .value {
         font-size: 20px;
     }
@@ -889,15 +935,19 @@ footer {
         font-size: 13px;
     }
 
-    #radMap {
-        height: 300px;
-    }
-
     .map-header {
         flex-direction: column;
     }
 
     .map-refresh {
         width: 100%;
+    }
+
+    #radMap {
+        height: 320px;
+    }
+
+    .map-legend {
+        gap: 10px;
     }
 }
