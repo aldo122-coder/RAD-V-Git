@@ -2,35 +2,625 @@
 <html lang="id">
 
 <head>
+
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <meta name="description"
-          content="RAD-V Monitoring and Control Dashboard">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>RAD-V Monitoring & Control</title>
 
 
     <!-- =====================================================
          LEAFLET CSS
-         WAJIB SEBELUM style.css
     ====================================================== -->
 
     <link
         rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIINfQ3Qm5cN7n5W5F8qH8h3F2z0M9y5xgM="
+        integrity="sha256-p4NxAoJBhIINfQ3KcT2aY1p5g5k7b9z6x2h3k8l9m0="
         crossorigin=""
     >
 
 
     <!-- =====================================================
-         STYLE DASHBOARD
+         STYLE
     ====================================================== -->
 
-    <link rel="stylesheet" href="style.css">
+    <style>
+
+        /* =================================================
+           RESET
+        ================================================= */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        /* =================================================
+           BODY
+        ================================================= */
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #10141c;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+
+        /* =================================================
+           CONTAINER
+        ================================================= */
+
+        .container {
+            width: 95%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 0 40px;
+        }
+
+
+        /* =================================================
+           SECTION
+        ================================================= */
+
+        .section {
+            background: #1b2230;
+            border: 1px solid #2d3748;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+
+        /* =================================================
+           STATUS
+        ================================================= */
+
+        .section-title {
+            text-align: center;
+            font-size: 25px;
+            margin-bottom: 20px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            background: #141a24;
+
+            padding: 13px;
+
+            border-radius: 8px;
+
+            margin-top: 8px;
+
+            font-size: 16px;
+        }
+
+        .status-value {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+
+        /* =================================================
+           MAP HEADER
+        ================================================= */
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 15px;
+
+            margin-bottom: 15px;
+        }
+
+        .map-title h2 {
+            font-size: 25px;
+            margin-bottom: 6px;
+        }
+
+        .map-title p {
+            color: #8d99aa;
+            font-size: 13px;
+        }
+
+
+        /* =================================================
+           REFRESH BUTTON
+        ================================================= */
+
+        .refresh-button {
+            flex-shrink: 0;
+
+            border: none;
+
+            border-radius: 9px;
+
+            padding: 11px 16px;
+
+            background: #2563eb;
+
+            color: white;
+
+            font-weight: bold;
+
+            font-size: 13px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .refresh-button:hover {
+            background: #1d4ed8;
+        }
+
+        .refresh-button:active {
+            transform: scale(0.97);
+        }
+
+
+        /* =================================================
+           MAP
+        ================================================= */
+
+        #radMap {
+
+            width: 100%;
+
+            height: 430px;
+
+            min-height: 430px;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            border: 1px solid #2d3748;
+
+            background: #dbe3ef;
+
+            position: relative;
+
+        }
+
+
+        /*
+         * SANGAT PENTING
+         *
+         * Jangan menggunakan:
+         *
+         * img {
+         *     max-width: 100%;
+         * }
+         *
+         * karena dapat merusak tile Leaflet.
+         */
+
+        #radMap img.leaflet-tile {
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+
+        /*
+         * Pastikan container Leaflet
+         * mempunyai posisi yang benar.
+         */
+
+        #radMap .leaflet-container {
+            width: 100%;
+            height: 100%;
+        }
+
+
+        /* =================================================
+           LEAFLET FIX
+        ================================================= */
+
+        .leaflet-container img {
+            max-width: none !important;
+        }
+
+        .leaflet-tile {
+            width: 256px !important;
+            height: 256px !important;
+        }
+
+
+        /* =================================================
+           MAP LEGEND
+        ================================================= */
+
+        .map-legend {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 18px;
+
+            margin-top: 12px;
+
+            color: #b5bfce;
+
+            font-size: 12px;
+
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-dot {
+
+            width: 10px;
+            height: 10px;
+
+            border-radius: 50%;
+
+            margin-right: 6px;
+
+            display: inline-block;
+
+        }
+
+        .legend-low {
+            background: #22c55e;
+        }
+
+        .legend-medium {
+            background: #f59e0b;
+        }
+
+        .legend-high {
+            background: #ef4444;
+        }
+
+        .legend-latest {
+            background: #2563eb;
+
+            box-shadow:
+                0 0 0 3px rgba(37, 99, 235, 0.25);
+        }
+
+
+        /* =================================================
+           TABLE HEADER
+        ================================================= */
+
+        .table-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 15px;
+
+            margin-bottom: 15px;
+
+        }
+
+        .table-title h2 {
+            font-size: 25px;
+            margin-bottom: 6px;
+        }
+
+        .table-title p {
+            color: #8d99aa;
+            font-size: 13px;
+        }
+
+
+        /* =================================================
+           TABLE WRAPPER
+        ================================================= */
+
+        .table-wrapper {
+
+            width: 100%;
+
+            overflow-x: auto;
+
+            border: 1px solid #2d3748;
+
+            border-radius: 10px;
+
+        }
+
+
+        /* =================================================
+           TABLE
+        ================================================= */
+
+        #radiationTable {
+
+            width: 100%;
+
+            min-width: 760px;
+
+            border-collapse: collapse;
+
+            background: #141a24;
+
+        }
+
+
+        /* =================================================
+           TABLE HEAD
+        ================================================= */
+
+        #radiationTable thead th {
+
+            background: #2563eb;
+
+            color: white;
+
+            padding: 12px 10px;
+
+            text-align: center;
+
+            font-size: 13px;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =================================================
+           TABLE BODY
+        ================================================= */
+
+        #radiationTable tbody td {
+
+            padding: 11px 10px;
+
+            border-bottom: 1px solid #2d3748;
+
+            text-align: center;
+
+            color: #dbe3ef;
+
+            font-size: 12px;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =================================================
+           TABLE ROW
+        ================================================= */
+
+        #radiationTable tbody tr {
+
+            cursor: pointer;
+
+            transition: background 0.15s;
+
+        }
+
+        #radiationTable tbody tr:hover {
+
+            background: #202a3a;
+
+        }
+
+
+        #radiationTable tbody tr.latest-row {
+
+            background: rgba(37, 99, 235, 0.18);
+
+        }
+
+
+        /* =================================================
+           RADIATION COLOR
+        ================================================= */
+
+        .radiation-low {
+
+            color: #22c55e !important;
+
+            font-weight: bold;
+
+        }
+
+        .radiation-medium {
+
+            color: #f59e0b !important;
+
+            font-weight: bold;
+
+        }
+
+        .radiation-high {
+
+            color: #ef4444 !important;
+
+            font-weight: bold;
+
+        }
+
+
+        /* =================================================
+           MAP BUTTON
+        ================================================= */
+
+        .table-map-button {
+
+            border: none;
+
+            border-radius: 6px;
+
+            padding: 7px 10px;
+
+            background: #2563eb;
+
+            color: white;
+
+            font-size: 11px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+        .table-map-button:hover {
+
+            background: #1d4ed8;
+
+        }
+
+
+        /* =================================================
+           EMPTY TABLE
+        ================================================= */
+
+        .table-empty {
+
+            text-align: center !important;
+
+            padding: 30px !important;
+
+            color: #7f8a9a !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER
+        ================================================= */
+
+        footer {
+
+            text-align: center;
+
+            color: #687386;
+
+            font-size: 13px;
+
+            margin-top: 25px;
+
+        }
+
+
+        /* =================================================
+           MOBILE
+        ================================================= */
+
+        @media (max-width: 700px) {
+
+            .container {
+
+                width: 94%;
+
+                padding-top: 15px;
+
+            }
+
+
+            .section {
+
+                padding: 15px;
+
+            }
+
+
+            .section-title {
+
+                font-size: 22px;
+
+            }
+
+
+            .map-header {
+
+                align-items: flex-start;
+
+            }
+
+
+            .map-title h2,
+            .table-title h2 {
+
+                font-size: 20px;
+
+            }
+
+
+            .map-title p,
+            .table-title p {
+
+                font-size: 12px;
+
+            }
+
+
+            .refresh-button {
+
+                padding: 9px 12px;
+
+                font-size: 12px;
+
+            }
+
+
+            #radMap {
+
+                height: 350px;
+
+                min-height: 350px;
+
+            }
+
+        }
+
+
+        @media (max-width: 480px) {
+
+            .map-header,
+            .table-header {
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+            }
+
+
+            .refresh-button {
+
+                width: 100%;
+
+            }
+
+
+            #radMap {
+
+                height: 320px;
+
+                min-height: 320px;
+
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -38,672 +628,1247 @@
 <body>
 
 
-    <!-- =====================================================
-         CONTAINER UTAMA
-    ====================================================== -->
-
-    <main class="container">
+<div class="container">
 
 
-        <!-- =================================================
-             HEADER
-        ================================================== -->
+    <!-- =================================================
+         STATUS
+    ================================================== -->
 
-        <header class="dashboard-header">
+    <section class="section">
 
-            <h1>RAD-V MONITORING &amp; CONTROL</h1>
-
-            <p class="subtitle">
-                Radiation Area Detector Vehicle
-            </p>
-
-        </header>
+        <h2 class="section-title">
+            STATUS
+        </h2>
 
 
-        <!-- =================================================
-             SENSOR DATA
-        ================================================== -->
+        <div class="status-row">
 
-        <section class="sensor-grid">
+            <span>
+                Perintah
+            </span>
 
+            <strong
+                id="commandStatus"
+                class="status-value">
+                STOP
+            </strong>
 
-            <!-- CPM -->
-
-            <div class="card">
-
-                <h3>CPM</h3>
-
-                <div
-                    id="cpmValue"
-                    class="value"
-                >
-                    --
-                </div>
-
-                <span>
-                    Counts Per Minute
-                </span>
-
-            </div>
+        </div>
 
 
-            <!-- RADIATION -->
+        <div class="status-row">
 
-            <div class="card">
+            <span>
+                Status Sistem
+            </span>
 
-                <h3>Radiasi</h3>
+            <strong
+                id="systemStatus"
+                class="status-value">
+                READY
+            </strong>
 
-                <div
-                    id="usvhValue"
-                    class="value"
-                >
-                    --
-                </div>
+        </div>
 
-                <span>
-                    μSv/h
-                </span>
-
-            </div>
+    </section>
 
 
-            <!-- LONGITUDE -->
 
-            <div class="card">
+    <!-- =================================================
+         PEMETAAN RAD-V
+    ================================================== -->
 
-                <h3>Longitude</h3>
+    <section class="section">
 
-                <div
-                    id="longitudeValue"
-                    class="value gps"
-                >
-                    --
-                </div>
 
-                <span>
-                    GPS
-                </span>
+        <!-- MAP HEADER -->
+
+        <div class="map-header">
+
+            <div class="map-title">
+
+                <h2>
+                    PEMETAAN RAD-V
+                </h2>
+
+                <p id="mapInfo">
+                    Menunggu data koordinat dari Google Spreadsheet...
+                </p>
 
             </div>
-
-
-            <!-- LATITUDE -->
-
-            <div class="card">
-
-                <h3>Latitude</h3>
-
-                <div
-                    id="latitudeValue"
-                    class="value gps"
-                >
-                    --
-                </div>
-
-                <span>
-                    GPS
-                </span>
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             PEMETAAN RAD-V
-        ================================================== -->
-
-        <section class="map-section">
-
-
-            <!-- HEADER MAP -->
-
-            <div class="map-header">
-
-
-                <div>
-
-                    <h2>
-                        PEMETAAN RAD-V
-                    </h2>
-
-                    <p id="mapInfo">
-                        Memuat data GPS...
-                    </p>
-
-                </div>
-
-
-                <button
-                    id="refreshMapBtn"
-                    class="map-refresh"
-                    type="button"
-                >
-                    ↻ REFRESH
-                </button>
-
-
-            </div>
-
-
-
-            <!-- =================================================
-                 LEAFLET MAP CONTAINER
-
-                 PENTING:
-                 Jangan masukkan elemen lain di dalam #radMap.
-            ================================================== -->
-
-            <div
-                id="radMap"
-                aria-label="Peta lokasi RAD-V"
-            ></div>
-
-
-
-            <!-- =================================================
-                 LEGEND
-            ================================================== -->
-
-            <div class="map-legend">
-
-
-                <div class="legend-item">
-
-                    <span class="legend-dot safe"></span>
-
-                    <span>
-                        Rendah
-                    </span>
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-dot medium"></span>
-
-                    <span>
-                        Sedang
-                    </span>
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-dot high"></span>
-
-                    <span>
-                        Tinggi
-                    </span>
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-dot latest"></span>
-
-                    <span>
-                        Posisi Terbaru
-                    </span>
-
-                </div>
-
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             DATA SPREADSHEET
-        ================================================== -->
-
-        <section class="table-section">
-
-
-            <!-- TABLE HEADER -->
-
-            <div class="table-header">
-
-
-                <div>
-
-                    <h2>
-                        DATA SPREADSHEET RAD-V
-                    </h2>
-
-                    <p id="tableInfo">
-                        Memuat data...
-                    </p>
-
-                </div>
-
-
-                <button
-                    id="refreshTableBtn"
-                    class="map-refresh"
-                    type="button"
-                >
-                    ↻ REFRESH
-                </button>
-
-
-            </div>
-
-
-
-            <!-- =================================================
-                 TABLE WRAPPER
-            ================================================== -->
-
-            <div class="table-wrapper">
-
-
-                <table id="radiationTable">
-
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                No.
-                            </th>
-
-                            <th>
-                                Timestamp
-                            </th>
-
-                            <th>
-                                CPM
-                            </th>
-
-                            <th>
-                                μSv/h
-                            </th>
-
-                            <th>
-                                Longitude
-                            </th>
-
-                            <th>
-                                Latitude
-                            </th>
-
-                            <th>
-                                Peta
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="radiationTableBody">
-
-                        <tr>
-
-                            <td
-                                colspan="7"
-                                class="table-empty"
-                            >
-                                Memuat data RAD-V...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-
-                </table>
-
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             CONTROL RAD-V
-        ================================================== -->
-
-        <section class="control-section">
-
-
-            <h2>
-                KONTROL RAD-V
-            </h2>
-
-
-            <!-- SWITCH -->
-
-            <div class="switch-container">
-
-
-                <div class="switch-card">
-
-                    <h3>
-                        Sistem RAD-V
-                    </h3>
-
-                    <div
-                        id="systemSwitch"
-                        class="switch"
-                        role="button"
-                        tabindex="0"
-                    >
-
-                        <div class="switch-circle"></div>
-
-                    </div>
-
-
-                    <div
-                        id="systemSwitchStatus"
-                        class="switch-status"
-                    >
-                        OFF
-                    </div>
-
-                </div>
-
-
-
-                <div class="switch-card">
-
-                    <h3>
-                        Akuisisi Data
-                    </h3>
-
-                    <div
-                        id="dataSwitch"
-                        class="switch"
-                        role="button"
-                        tabindex="0"
-                    >
-
-                        <div class="switch-circle"></div>
-
-                    </div>
-
-
-                    <div
-                        id="dataSwitchStatus"
-                        class="switch-status"
-                    >
-                        OFF
-                    </div>
-
-                </div>
-
-
-            </div>
-
-
-
-            <!-- =================================================
-                 REMOTE CONTROL
-            ================================================== -->
-
-            <div class="direction-control">
-
-
-                <!-- RTB -->
-
-                <button
-                    id="rtbButton"
-                    class="rtb-button"
-                    type="button"
-                >
-                    ↩ RETURN TO BASE
-                </button>
-
-
-
-                <!-- CONTROL UTAMA -->
-
-                <div class="rc-main">
-
-
-                    <!-- KIRI -->
-
-                    <div class="side-control">
-
-                        <button
-                            id="leftButton"
-                            class="control-button kiri"
-                            type="button"
-                        >
-
-                            <span class="arrow">
-                                ←
-                            </span>
-
-                            <span>
-                                KIRI
-                            </span>
-
-                        </button>
-
-
-                        <button
-                            id="rightButton"
-                            class="control-button kanan"
-                            type="button"
-                        >
-
-                            <span class="arrow">
-                                →
-                            </span>
-
-                            <span>
-                                KANAN
-                            </span>
-
-                        </button>
-
-                    </div>
-
-
-
-                    <!-- MAJU MUNDUR -->
-
-                    <div class="forward-control">
-
-
-                        <button
-                            id="forwardButton"
-                            class="control-button maju"
-                            type="button"
-                        >
-
-                            <span class="arrow">
-                                ↑
-                            </span>
-
-                            <span>
-                                MAJU
-                            </span>
-
-                        </button>
-
-
-
-                        <button
-                            id="backwardButton"
-                            class="control-button mundur"
-                            type="button"
-                        >
-
-                            <span class="arrow">
-                                ↓
-                            </span>
-
-                            <span>
-                                MUNDUR
-                            </span>
-
-                        </button>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             STATUS
-        ================================================== -->
-
-        <section class="status-card">
-
-
-            <h2>
-                STATUS SISTEM
-            </h2>
-
-
-            <div class="status-row">
-
-                <span>
-                    Koneksi
-                </span>
-
-                <strong id="connectionStatus">
-                    ONLINE
-                </strong>
-
-            </div>
-
-
-            <div class="status-row">
-
-                <span>
-                    GPS
-                </span>
-
-                <strong id="gpsStatus">
-                    TERDETEKSI
-                </strong>
-
-            </div>
-
-
-            <div class="status-row">
-
-                <span>
-                    Sensor Radiasi
-                </span>
-
-                <strong id="radiationStatus">
-                    AKTIF
-                </strong>
-
-            </div>
-
-
-            <div class="status-row">
-
-                <span>
-                    Update Data
-                </span>
-
-                <strong id="updateStatus">
-                    --
-                </strong>
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             DATA LINK
-        ================================================== -->
-
-        <section class="link-section">
-
-
-            <h2>
-                DATA &amp; VISUALISASI
-            </h2>
 
 
             <button
-                id="spreadsheetBtn"
-                class="link-button spreadsheet"
-                type="button"
-            >
-                📊 GOOGLE SPREADSHEET
+                id="mapRefresh"
+                class="refresh-button"
+                type="button">
+
+                ↻ REFRESH
+
             </button>
 
-
-            <button
-                id="datastudioBtn"
-                class="link-button datastudio"
-                type="button"
-            >
-                📈 GOOGLE LOOKER STUDIO
-            </button>
-
-
-        </section>
+        </div>
 
 
 
         <!-- =================================================
-             FOOTER
+             MAP CONTAINER
+
+             INI WAJIB ADA
         ================================================== -->
 
-        <footer>
-
-            RAD-V — Radiation Area Detector Vehicle
-
-        </footer>
-
-
-    </main>
+        <div id="radMap"></div>
 
 
 
-    <!-- =====================================================
-         LEAFLET JS
-         
-         WAJIB DILOAD SEBELUM map.js
-    ====================================================== -->
+        <!-- =================================================
+             LEGEND
+        ================================================== -->
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-    ></script>
+        <div class="map-legend">
 
 
+            <div class="legend-item">
 
-    <!-- =====================================================
-         MAP JS
-    ====================================================== -->
+                <span
+                    class="legend-dot legend-low">
+                </span>
 
-    <script src="map.js"></script>
+                Rendah
+
+            </div>
+
+
+            <div class="legend-item">
+
+                <span
+                    class="legend-dot legend-medium">
+                </span>
+
+                Sedang
+
+            </div>
+
+
+            <div class="legend-item">
+
+                <span
+                    class="legend-dot legend-high">
+                </span>
+
+                Tinggi
+
+            </div>
+
+
+            <div class="legend-item">
+
+                <span
+                    class="legend-dot legend-latest">
+                </span>
+
+                Posisi Terbaru
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         DATA SPREADSHEET RAD-V
+    ================================================== -->
+
+    <section class="section">
+
+
+        <!-- TABLE HEADER -->
+
+        <div class="table-header">
+
+            <div class="table-title">
+
+                <h2>
+                    DATA SPREADSHEET RAD-V
+                </h2>
+
+                <p id="tableInfo">
+                    Menunggu data dari Google Spreadsheet...
+                </p>
+
+            </div>
+
+
+            <button
+                id="tableRefresh"
+                class="refresh-button"
+                type="button">
+
+                ↻ REFRESH
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE
+        ================================================== -->
+
+        <div class="table-wrapper">
+
+            <table id="radiationTable">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            No.
+                        </th>
+
+                        <th>
+                            Timestamp
+                        </th>
+
+                        <th>
+                            CPM
+                        </th>
+
+                        <th>
+                            uSv/h
+                        </th>
+
+                        <th>
+                            Longitude
+                        </th>
+
+                        <th>
+                            Latitude
+                        </th>
+
+                        <th>
+                            Peta
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="radiationTableBody">
+
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="table-empty">
+
+                            Menunggu data...
+
+                        </td>
+
+                    </tr>
+
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer>
+
+        RAD-V — Radiation Area Detector Vehicle
+
+    </footer>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     LEAFLET JS
+====================================================== -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+</script>
+
+
+
+<script>
+
+/* =========================================================
+   RAD-V MAP
+========================================================= */
+
+
+/*
+ * =========================================================
+ * GOOGLE APPS SCRIPT URL
+ * =========================================================
+ *
+ * GANTI dengan URL Apps Script kamu.
+ */
+
+const GAS_URL =
+    "MASUKKAN_URL_GOOGLE_APPS_SCRIPT_KAMU_DI_SINI";
+
+
+/* =========================================================
+   KONFIGURASI MAP
+========================================================= */
+
+const DEFAULT_LAT = -5.3585;
+const DEFAULT_LNG = 105.2833;
+const DEFAULT_ZOOM = 16;
+
+
+/* =========================================================
+   INISIALISASI MAP
+========================================================= */
+
+const map = L.map("radMap", {
+
+    center: [
+        DEFAULT_LAT,
+        DEFAULT_LNG
+    ],
+
+    zoom: DEFAULT_ZOOM,
+
+    zoomControl: true,
+
+    attributionControl: true
+
+});
+
+
+/* =========================================================
+   OPENSTREETMAP
+========================================================= */
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        maxZoom: 19,
+
+        attribution:
+            '&copy; OpenStreetMap contributors'
+    }
+).addTo(map);
+
+
+/* =========================================================
+   LAYER MARKER
+========================================================= */
+
+const markerLayer = L.layerGroup().addTo(map);
+
+
+/* =========================================================
+   LATEST MARKER
+========================================================= */
+
+let latestMarker = null;
+
+
+/* =========================================================
+   REFRESH MAP SIZE
+ *
+ * Ini penting supaya Leaflet menghitung ukuran
+ * container dengan benar.
+========================================================= */
+
+setTimeout(() => {
+
+    map.invalidateSize();
+
+}, 300);
+
+
+
+/* =========================================================
+   RADIATION COLOR
+========================================================= */
+
+function getRadiationColor(value) {
+
+    value = Number(value);
+
+    if (!Number.isFinite(value)) {
+
+        return "#22c55e";
+
+    }
+
+
+    /*
+     * Rendah
+     */
+
+    if (value < 0.3) {
+
+        return "#22c55e";
+
+    }
+
+
+    /*
+     * Sedang
+     */
+
+    if (value < 1.0) {
+
+        return "#f59e0b";
+
+    }
+
+
+    /*
+     * Tinggi
+     */
+
+    return "#ef4444";
+
+}
+
+
+
+/* =========================================================
+   CREATE MARKER
+========================================================= */
+
+function createRadiationMarker(
+    latitude,
+    longitude,
+    usvh,
+    timestamp,
+    latest = false
+) {
+
+    const color =
+        latest
+            ? "#2563eb"
+            : getRadiationColor(usvh);
+
+
+    const radius =
+        latest
+            ? 9
+            : 7;
+
+
+    const marker = L.circleMarker(
+        [
+            latitude,
+            longitude
+        ],
+        {
+
+            radius: radius,
+
+            color: "#ffffff",
+
+            weight: 2,
+
+            fillColor: color,
+
+            fillOpacity: 0.9
+
+        }
+    );
+
+
+    marker.bindPopup(`
+
+        <div style="
+            min-width:180px;
+            font-family:Arial;
+        ">
+
+            <b>RAD-V</b>
+
+            <hr>
+
+            <b>uSv/h:</b>
+            ${Number(usvh).toFixed(4)}
+
+            <br>
+
+            <b>Latitude:</b>
+            ${latitude}
+
+            <br>
+
+            <b>Longitude:</b>
+            ${longitude}
+
+            <br>
+
+            <b>Waktu:</b>
+            ${timestamp || "-"}
+
+        </div>
+
+    `);
+
+
+    return marker;
+
+}
+
+
+
+/* =========================================================
+   NORMALIZE DATA
+========================================================= */
+
+function normalizeData(data) {
+
+    /*
+     * Jika Apps Script mengembalikan:
+     *
+     * [
+     *   {...},
+     *   {...}
+     * ]
+     */
+
+    if (Array.isArray(data)) {
+
+        return data;
+
+    }
+
+
+    /*
+     * Jika:
+     *
+     * {data:[...]}
+     */
+
+    if (data && Array.isArray(data.data)) {
+
+        return data.data;
+
+    }
+
+
+    /*
+     * Jika:
+     *
+     * {rows:[...]}
+     */
+
+    if (data && Array.isArray(data.rows)) {
+
+        return data.rows;
+
+    }
+
+
+    return [];
+
+}
+
+
+
+/* =========================================================
+   GET VALUE DARI OBJECT
+========================================================= */
+
+function getValue(row, names) {
+
+    if (!row || typeof row !== "object") {
+
+        return "";
+
+    }
+
+
+    for (const name of names) {
+
+        if (
+            Object.prototype.hasOwnProperty.call(
+                row,
+                name
+            )
+        ) {
+
+            return row[name];
+
+        }
+
+    }
+
+
+    return "";
+
+}
+
+
+
+/* =========================================================
+   FETCH DATA
+========================================================= */
+
+async function loadData() {
+
+    const mapInfo =
+        document.getElementById("mapInfo");
+
+    const tableInfo =
+        document.getElementById("tableInfo");
+
+
+    try {
+
+        mapInfo.textContent =
+            "Mengambil data dari Google Spreadsheet...";
+
+        tableInfo.textContent =
+            "Mengambil data dari Google Spreadsheet...";
+
+
+        /*
+         * Pastikan URL sudah diganti.
+         */
+
+        if (
+            !GAS_URL ||
+            GAS_URL.includes("MASUKKAN_URL")
+        ) {
+
+            throw new Error(
+                "GAS_URL belum diisi."
+            );
+
+        }
+
+
+        const response =
+            await fetch(GAS_URL, {
+                method: "GET",
+                cache: "no-store"
+            });
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP Error " +
+                response.status
+            );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        const data =
+            normalizeData(result);
+
+
+        if (!data.length) {
+
+            mapInfo.textContent =
+                "Tidak ada data koordinat.";
+
+            tableInfo.textContent =
+                "Tidak ada data dari Google Spreadsheet.";
+
+            renderTable([]);
+
+            markerLayer.clearLayers();
+
+            return;
+
+        }
+
+
+        /*
+         * Bersihkan marker lama
+         */
+
+        markerLayer.clearLayers();
+
+        latestMarker = null;
+
+
+        const validPoints = [];
+
+
+        data.forEach((row, index) => {
+
+            const latitude =
+                Number(
+                    getValue(
+                        row,
+                        [
+                            "Latitude",
+                            "latitude",
+                            "LATITUDE",
+                            "lat"
+                        ]
+                    )
+                );
+
+
+            const longitude =
+                Number(
+                    getValue(
+                        row,
+                        [
+                            "Longitude",
+                            "longitude",
+                            "LONGITUDE",
+                            "lng",
+                            "lon"
+                        ]
+                    )
+                );
+
+
+            const usvh =
+                Number(
+                    getValue(
+                        row,
+                        [
+                            "uSv/h",
+                            "uSv",
+                            "usvh",
+                            "USV/H",
+                            "USVh"
+                        ]
+                    )
+                );
+
+
+            const timestamp =
+                getValue(
+                    row,
+                    [
+                        "Timestamp",
+                        "timestamp",
+                        "TIME",
+                        "time"
+                    ]
+                );
+
+
+            /*
+             * Koordinat 0,0 jangan ditampilkan.
+             */
+
+            if (
+
+                Number.isFinite(latitude) &&
+
+                Number.isFinite(longitude) &&
+
+                latitude !== 0 &&
+
+                longitude !== 0
+
+            ) {
+
+                validPoints.push({
+
+                    latitude,
+                    longitude,
+                    usvh,
+                    timestamp
+
+                });
+
+            }
+
+        });
+
+
+        /*
+         * Marker
+         */
+
+        validPoints.forEach(
+            (point, index) => {
+
+                const isLatest =
+                    index ===
+                    validPoints.length - 1;
+
+
+                const marker =
+                    createRadiationMarker(
+                        point.latitude,
+                        point.longitude,
+                        point.usvh,
+                        point.timestamp,
+                        isLatest
+                    );
+
+
+                marker.addTo(markerLayer);
+
+
+                if (isLatest) {
+
+                    latestMarker = marker;
+
+                }
+
+            }
+        );
+
+
+        /*
+         * Center ke posisi terbaru
+         */
+
+        if (validPoints.length > 0) {
+
+            const latest =
+                validPoints[
+                    validPoints.length - 1
+                ];
+
+
+            map.setView(
+                [
+                    latest.latitude,
+                    latest.longitude
+                ],
+                DEFAULT_ZOOM
+            );
+
+
+            mapInfo.textContent =
+                `${validPoints.length} titik GPS | ` +
+                `Posisi terbaru: ` +
+                `${latest.latitude.toFixed(6)}, ` +
+                `${latest.longitude.toFixed(6)} | ` +
+                `Update otomatis 10 detik`;
+
+        }
+        else {
+
+            mapInfo.textContent =
+                "Data tersedia tetapi koordinat tidak valid.";
+
+        }
+
+
+        /*
+         * Tampilkan tabel
+         */
+
+        renderTable(data);
+
+
+        tableInfo.textContent =
+            `${data.length} data | ` +
+            `Klik baris untuk melihat posisi pada peta.`;
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "RAD-V ERROR:",
+            error
+        );
+
+
+        mapInfo.textContent =
+            "Gagal mengambil data koordinat.";
+
+        tableInfo.textContent =
+            "Gagal mengambil data dari Google Spreadsheet.";
+
+        renderTable([]);
+
+    }
+
+
+    /*
+     * Pastikan ukuran Leaflet benar.
+     */
+
+    setTimeout(() => {
+
+        map.invalidateSize();
+
+    }, 200);
+
+}
+
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+function renderTable(data) {
+
+    const tbody =
+        document.getElementById(
+            "radiationTableBody"
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    if (!data.length) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    class="table-empty">
+
+                    Tidak ada data.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    data.forEach(
+        (row, index) => {
+
+            const timestamp =
+                getValue(
+                    row,
+                    [
+                        "Timestamp",
+                        "timestamp",
+                        "TIME",
+                        "time"
+                    ]
+                );
+
+
+            const cpm =
+                getValue(
+                    row,
+                    [
+                        "CPM",
+                        "cpm"
+                    ]
+                );
+
+
+            const usvh =
+                getValue(
+                    row,
+                    [
+                        "uSv/h",
+                        "uSv",
+                        "usvh",
+                        "USV/H"
+                    ]
+                );
+
+
+            const longitude =
+                getValue(
+                    row,
+                    [
+                        "Longitude",
+                        "longitude",
+                        "lng"
+                    ]
+                );
+
+
+            const latitude =
+                getValue(
+                    row,
+                    [
+                        "Latitude",
+                        "latitude",
+                        "lat"
+                    ]
+                );
+
+
+            const usvhNumber =
+                Number(usvh);
+
+
+            let radiationClass =
+                "radiation-low";
+
+
+            if (
+                Number.isFinite(usvhNumber)
+            ) {
+
+                if (usvhNumber >= 1.0) {
+
+                    radiationClass =
+                        "radiation-high";
+
+                }
+                else if (usvhNumber >= 0.3) {
+
+                    radiationClass =
+                        "radiation-medium";
+
+                }
+
+            }
+
+
+            const tr =
+                document.createElement("tr");
+
+
+            /*
+             * Data terbaru
+             */
+
+            if (
+                index === data.length - 1
+            ) {
+
+                tr.classList.add(
+                    "latest-row"
+                );
+
+            }
+
+
+            tr.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${timestamp || "-"}
+                </td>
+
+                <td>
+                    ${cpm || "-"}
+                </td>
+
+                <td
+                    class="${radiationClass}">
+                    ${
+                        Number.isFinite(usvhNumber)
+                            ? usvhNumber.toFixed(4)
+                            : usvh || "-"
+                    }
+                </td>
+
+                <td>
+                    ${longitude || "-"}
+                </td>
+
+                <td>
+                    ${latitude || "-"}
+                </td>
+
+                <td>
+
+                    <button
+                        class="table-map-button"
+                        type="button">
+
+                        📍 LIHAT
+
+                    </button>
+
+                </td>
+
+            `;
+
+
+            /*
+             * Klik baris
+             */
+
+            tr.addEventListener(
+                "click",
+                () => {
+
+                    const lat =
+                        Number(latitude);
+
+                    const lng =
+                        Number(longitude);
+
+
+                    if (
+
+                        !Number.isFinite(lat) ||
+
+                        !Number.isFinite(lng) ||
+
+                        lat === 0 ||
+
+                        lng === 0
+
+                    ) {
+
+                        alert(
+                            "Koordinat tidak valid."
+                        );
+
+                        return;
+
+                    }
+
+
+                    map.setView(
+                        [
+                            lat,
+                            lng
+                        ],
+                        18
+                    );
+
+
+                    /*
+                     * Cari marker terdekat
+                     */
+
+                    markerLayer.eachLayer(
+                        layer => {
+
+                            if (
+                                layer.getLatLng
+                            ) {
+
+                                const pos =
+                                    layer.getLatLng();
+
+
+                                if (
+
+                                    Math.abs(
+                                        pos.lat - lat
+                                    ) < 0.000001 &&
+
+                                    Math.abs(
+                                        pos.lng - lng
+                                    ) < 0.000001
+
+                                ) {
+
+                                    layer.openPopup();
+
+                                }
+
+                            }
+
+                        }
+                    );
+
+
+                    /*
+                     * Scroll ke map
+                     */
+
+                    document
+                        .getElementById(
+                            "radMap"
+                        )
+                        .scrollIntoView({
+                            behavior: "smooth",
+                            block: "center"
+                        });
+
+                }
+            );
+
+
+            tbody.appendChild(tr);
+
+        }
+    );
+
+}
+
+
+
+/* =========================================================
+   REFRESH BUTTON MAP
+========================================================= */
+
+document
+    .getElementById("mapRefresh")
+    .addEventListener(
+        "click",
+        loadData
+    );
+
+
+
+/* =========================================================
+   REFRESH BUTTON TABLE
+========================================================= */
+
+document
+    .getElementById("tableRefresh")
+    .addEventListener(
+        "click",
+        loadData
+    );
+
+
+
+/* =========================================================
+   LOAD PERTAMA
+========================================================= */
+
+loadData();
+
+
+
+/* =========================================================
+   AUTO UPDATE
+========================================================= */
+
+setInterval(
+    loadData,
+    10000
+);
+
+</script>
 
 
 </body>
