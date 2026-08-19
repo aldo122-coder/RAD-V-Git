@@ -27,6 +27,44 @@
 
 <body>
 
+    <!-- =====================================================
+     PIN LOGIN RAD-V
+===================================================== -->
+
+<div id="pinScreen" class="pin-screen">
+
+    <div class="pin-box">
+
+        <div class="pin-icon">☢️</div>
+
+        <h2>RAD-V</h2>
+
+        <p>Masukkan PIN untuk mengakses kontrol</p>
+
+        <input
+            type="password"
+            id="pinInput"
+            class="pin-input"
+            maxlength="6"
+            inputmode="numeric"
+            placeholder="PIN"
+            autocomplete="off"
+        >
+
+        <button
+            type="button"
+            class="pin-button"
+            onclick="checkPIN()"
+        >
+            MASUK
+        </button>
+
+        <div id="pinError" class="pin-error"></div>
+
+    </div>
+
+</div>
+
 <div class="container">
 
     <h1>☢️ RAD-V ☢️</h1>
