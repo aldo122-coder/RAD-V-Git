@@ -4,10 +4,17 @@
     padding: 0;
 }
 
+html {
+    width: 100%;
+    min-height: 100%;
+}
+
 body {
     font-family: Arial, sans-serif;
     background: #10141c;
     color: white;
+    width: 100%;
+    min-height: 100vh;
 }
 
 .container {
@@ -16,6 +23,11 @@ body {
     margin: auto;
     padding: 20px 0 40px;
 }
+
+
+/* =========================================
+   HEADER
+========================================= */
 
 h1 {
     text-align: center;
@@ -70,7 +82,7 @@ h1 {
 
 
 /* =========================================
-   SECTION
+   CONTROL SECTION
 ========================================= */
 
 .control-section {
@@ -142,14 +154,14 @@ h1 {
 }
 
 
-//* =========================================
-   RAD-V
+/* =========================================
+   RAD-V CONTROL
 ========================================= */
 
 .direction-control {
     width: 100%;
     max-width: 750px;
-    margin: auto;
+    margin: 20px auto 0;
 }
 
 
@@ -160,7 +172,6 @@ h1 {
 .rtb-button {
     width: 100%;
     height: 65px;
-
     margin-bottom: 3px;
 
     border: none;
@@ -187,22 +198,19 @@ h1 {
 
 
 /* =========================================
-   AREA UTAMA
+   AREA UTAMA RC
 ========================================= */
 
 .rc-main {
     display: grid;
-
     grid-template-columns: 1fr 1fr;
 
     height: 260px;
-
     gap: 3px;
 
     background: #10141c;
 
     overflow: hidden;
-
     border-radius: 0 0 12px 12px;
 }
 
@@ -212,11 +220,8 @@ h1 {
 ========================================= */
 
 .side-control {
-
     display: grid;
-
     grid-template-columns: 1fr 1fr;
-
     gap: 3px;
 }
 
@@ -226,21 +231,17 @@ h1 {
 ========================================= */
 
 .forward-control {
-
     display: grid;
-
     grid-template-rows: 1fr 1fr;
-
     gap: 3px;
 }
 
 
 /* =========================================
-   BUTTON
+   BUTTON RC
 ========================================= */
 
 .control-button {
-
     width: 100%;
     height: 100%;
 
@@ -249,11 +250,8 @@ h1 {
     color: white;
 
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     justify-content: center;
 
     gap: 7px;
@@ -264,7 +262,6 @@ h1 {
     cursor: pointer;
 
     touch-action: none;
-
     user-select: none;
     -webkit-user-select: none;
 
@@ -285,7 +282,7 @@ h1 {
 
 
 /* =========================================
-   COLORS
+   WARNA BUTTON
 ========================================= */
 
 .control-button.kiri {
@@ -311,37 +308,7 @@ h1 {
 
 .control-button.active {
     filter: brightness(0.7);
-
     transform: scale(0.96);
-}
-
-
-/* =========================================
-   HP
-========================================= */
-
-@media (max-width: 700px) {
-
-    .direction-control {
-        max-width: 100%;
-    }
-
-    .rtb-button {
-        height: 58px;
-        font-size: 18px;
-    }
-
-    .rc-main {
-        height: 230px;
-    }
-
-    .control-button {
-        font-size: 16px;
-    }
-
-    .control-button .arrow {
-        font-size: 29px;
-    }
 }
 
 
@@ -350,20 +317,14 @@ h1 {
 ========================================= */
 
 .status-card {
-
     background: #1b2230;
-
     border-radius: 15px;
-
     padding: 20px;
-
     margin-top: 20px;
 }
 
 .status-row {
-
     display: flex;
-
     justify-content: space-between;
 
     padding: 12px;
@@ -376,16 +337,16 @@ h1 {
 }
 
 .status-row strong {
-
     color: #22c55e;
 }
 
 
 /* =========================================
-   DATA
+   PEMETAAN RAD-V
 ========================================= */
 
-.link-section {
+.map-section {
+    width: 100%;
 
     background: #1b2230;
 
@@ -396,8 +357,379 @@ h1 {
     margin-top: 20px;
 }
 
-.link-button {
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
+    gap: 15px;
+
+    margin-bottom: 15px;
+}
+
+.map-header h2 {
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.map-header p {
+    color: #7f8a9a;
+    font-size: 13px;
+}
+
+.map-refresh {
+    border: none;
+    border-radius: 8px;
+
+    padding: 10px 15px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.map-refresh:hover {
+    filter: brightness(1.1);
+}
+
+.map-refresh:active {
+    transform: scale(0.97);
+}
+
+
+/* =========================================
+   LEAFLET MAP
+========================================= */
+
+#radMap {
+    width: 100%;
+    height: 430px;
+
+    position: relative;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    border: 1px solid #2d3748;
+
+    background: #dbe3ef;
+
+    z-index: 1;
+}
+
+
+/*
+   PENTING:
+   Jangan biarkan CSS global memengaruhi
+   tile gambar Leaflet.
+*/
+
+#radMap img {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+
+/* Container Leaflet */
+
+#radMap.leaflet-container {
+    position: relative;
+    overflow: hidden;
+}
+
+
+/* Tile Leaflet */
+
+#radMap .leaflet-tile {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+
+/* Pastikan pane Leaflet berada
+   pada posisi yang benar */
+
+#radMap .leaflet-map-pane {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#radMap .leaflet-tile-pane {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#radMap .leaflet-overlay-pane {
+    position: absolute;
+}
+
+#radMap .leaflet-marker-pane {
+    position: absolute;
+}
+
+#radMap .leaflet-shadow-pane {
+    position: absolute;
+}
+
+#radMap .leaflet-popup-pane {
+    position: absolute;
+}
+
+
+/* =========================================
+   LEAFLET CONTROL
+========================================= */
+
+#radMap .leaflet-control {
+    z-index: 1000;
+}
+
+#radMap .leaflet-control-zoom {
+    margin: 10px;
+}
+
+#radMap .leaflet-control-zoom a {
+    color: #222;
+}
+
+
+/* =========================================
+   LEGEND MAP
+========================================= */
+
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 18px;
+
+    margin-top: 12px;
+
+    color: #aeb8c8;
+
+    font-size: 12px;
+}
+
+.legend-dot {
+    display: inline-block;
+
+    width: 10px;
+    height: 10px;
+
+    border-radius: 50%;
+
+    margin-right: 5px;
+}
+
+.legend-dot.safe {
+    background: #22c55e;
+}
+
+.legend-dot.medium {
+    background: #f59e0b;
+}
+
+.legend-dot.high {
+    background: #ef4444;
+}
+
+.legend-dot.latest {
+    background: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+
+/* =========================================
+   TABEL GOOGLE SPREADSHEET
+========================================= */
+
+.table-section {
+    background: #1b2230;
+
+    border-radius: 15px;
+
+    padding: 20px;
+
+    margin-top: 20px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 15px;
+}
+
+.table-header h2 {
+    margin-bottom: 5px;
+}
+
+.table-header p {
+    color: #7f8a9a;
+    font-size: 13px;
+}
+
+.table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border: 1px solid #2d3748;
+
+    border-radius: 10px;
+}
+
+#radiationTable {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 750px;
+
+    background: #141a24;
+}
+
+#radiationTable th {
+    background: #2563eb;
+
+    color: white;
+
+    padding: 12px 10px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    white-space: nowrap;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 2;
+}
+
+#radiationTable td {
+    padding: 10px;
+
+    border-bottom: 1px solid #2d3748;
+
+    text-align: center;
+
+    color: #dbe3ef;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+}
+
+#radiationTable tbody tr {
+    cursor: pointer;
+
+    transition: background 0.15s;
+}
+
+#radiationTable tbody tr:hover {
+    background: #202a3a;
+}
+
+#radiationTable tbody tr.latest-row {
+    background: rgba(37, 99, 235, 0.18);
+}
+
+#radiationTable tbody tr.latest-row td {
+    font-weight: bold;
+}
+
+
+/* =========================================
+   WARNA RADIASI
+========================================= */
+
+.radiation-low {
+    color: #22c55e !important;
+
+    font-weight: bold;
+}
+
+.radiation-medium {
+    color: #f59e0b !important;
+
+    font-weight: bold;
+}
+
+.radiation-high {
+    color: #ef4444 !important;
+
+    font-weight: bold;
+}
+
+
+/* =========================================
+   TABEL KOSONG
+========================================= */
+
+.table-empty {
+    padding: 25px !important;
+
+    color: #7f8a9a !important;
+}
+
+
+/* =========================================
+   BUTTON LIHAT PETA
+========================================= */
+
+.table-map-button {
+    border: none;
+
+    border-radius: 6px;
+
+    padding: 6px 9px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.table-map-button:hover {
+    filter: brightness(1.12);
+}
+
+
+/* =========================================
+   DATA LINK
+========================================= */
+
+.link-section {
+    background: #1b2230;
+
+    border-radius: 15px;
+
+    padding: 20px;
+
+    margin-top: 20px;
+}
+
+.link-button {
     width: 100%;
 
     height: 55px;
@@ -418,12 +750,10 @@ h1 {
 }
 
 .spreadsheet {
-
     background: #15803d;
 }
 
 .datastudio {
-
     background: #2563eb;
 }
 
@@ -433,7 +763,6 @@ h1 {
 ========================================= */
 
 footer {
-
     text-align: center;
 
     color: #687386;
@@ -445,161 +774,66 @@ footer {
 
 
 /* =========================================
-   HP
+   RESPONSIVE - TABLET / HP
 ========================================= */
 
 @media (max-width: 700px) {
 
-    .sensor-grid {
+    .container {
+        width: 94%;
+    }
 
+    .sensor-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-
     .card {
-
         padding: 15px 8px;
     }
 
-
     .value {
-
         font-size: 23px;
     }
 
-
     .gps {
-
         font-size: 15px;
+    }
+
+
+    /* SWITCH */
+
+    .switch-container {
+        grid-template-columns: 1fr;
     }
 
 
     /* RC */
 
     .direction-control {
-
         width: 100%;
     }
 
+    .rtb-button {
+        height: 58px;
 
-    .rc-grid {
-
-        gap: 10px;
+        font-size: 18px;
     }
 
-
-    .left-controls,
-    .right-controls {
-
-        gap: 10px;
+    .rc-main {
+        height: 230px;
     }
-
 
     .control-button {
+        font-size: 16px;
+    }
 
-        height: 105px;
-
-        font-size: 19px;
-
-        border-radius: 14px;
+    .control-button .arrow {
+        font-size: 29px;
     }
 
 
-    .rtb-button {
+    /* MAP */
 
-        height: 60px;
-
-        font-size: 19px;
-    }
-}
-
-/* =========================================
-   PEMETAAN RAD-V
-========================================= */
-
-.map-section {
-    background: #1b2230;
-    border-radius: 15px;
-    padding: 20px;
-    margin-top: 20px;
-}
-
-.map-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.map-header h2 {
-    margin-bottom: 5px;
-    text-align: left;
-}
-
-.map-header p {
-    color: #7f8a9a;
-    font-size: 13px;
-}
-
-.map-refresh {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    background: #2563eb;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.map-refresh:active {
-    transform: scale(0.97);
-}
-
-#radMap {
-    width: 100%;
-    height: 430px;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #2d3748;
-    z-index: 1;
-}
-
-.map-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    margin-top: 12px;
-    color: #aeb8c8;
-    font-size: 12px;
-}
-
-.legend-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-.legend-dot.safe {
-    background: #22c55e;
-}
-
-.legend-dot.medium {
-    background: #f59e0b;
-}
-
-.legend-dot.high {
-    background: #ef4444;
-}
-
-.legend-dot.latest {
-    background: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
-}
-
-@media (max-width: 700px) {
     .map-section {
         padding: 15px;
     }
@@ -615,110 +849,10 @@ footer {
     #radMap {
         height: 350px;
     }
-}
 
 
-/* =========================================
-   TABEL GOOGLE SPREADSHEET
-========================================= */
+    /* TABLE */
 
-.table-section {
-    background: #1b2230;
-    border-radius: 15px;
-    padding: 20px;
-    margin-top: 20px;
-}
-
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.table-header h2 {
-    margin-bottom: 5px;
-}
-
-.table-header p {
-    color: #7f8a9a;
-    font-size: 13px;
-}
-
-.table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    border: 1px solid #2d3748;
-    border-radius: 10px;
-}
-
-#radiationTable {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 750px;
-    background: #141a24;
-}
-
-#radiationTable th {
-    background: #2563eb;
-    color: white;
-    padding: 12px 10px;
-    text-align: center;
-    font-size: 13px;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-
-#radiationTable td {
-    padding: 10px;
-    border-bottom: 1px solid #2d3748;
-    text-align: center;
-    color: #dbe3ef;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-#radiationTable tbody tr {
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-#radiationTable tbody tr:hover {
-    background: #202a3a;
-}
-
-#radiationTable tbody tr.latest-row {
-    background: rgba(37, 99, 235, 0.18);
-}
-
-#radiationTable tbody tr.latest-row td {
-    font-weight: bold;
-}
-
-.radiation-low {
-    color: #22c55e !important;
-    font-weight: bold;
-}
-
-.radiation-medium {
-    color: #f59e0b !important;
-    font-weight: bold;
-}
-
-.radiation-high {
-    color: #ef4444 !important;
-    font-weight: bold;
-}
-
-.table-empty {
-    padding: 25px !important;
-    color: #7f8a9a !important;
-}
-
-@media (max-width: 700px) {
     .table-section {
         padding: 15px;
     }
@@ -729,17 +863,41 @@ footer {
 }
 
 
-.table-map-button {
-    border: none;
-    border-radius: 6px;
-    padding: 6px 9px;
-    background: #2563eb;
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
-}
+/* =========================================
+   VERY SMALL SCREEN
+========================================= */
 
-.table-map-button:hover {
-    filter: brightness(1.12);
+@media (max-width: 450px) {
+
+    .sensor-grid {
+        gap: 8px;
+    }
+
+    .card {
+        padding: 12px 5px;
+    }
+
+    .card h3 {
+        font-size: 14px;
+    }
+
+    .value {
+        font-size: 20px;
+    }
+
+    .gps {
+        font-size: 13px;
+    }
+
+    #radMap {
+        height: 300px;
+    }
+
+    .map-header {
+        flex-direction: column;
+    }
+
+    .map-refresh {
+        width: 100%;
+    }
 }
