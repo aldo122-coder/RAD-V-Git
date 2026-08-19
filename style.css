@@ -500,15 +500,10 @@ h1 {
 
 
 /* =========================================================
-   =========================================================
    PEMETAAN RAD-V
-   =========================================================
-   ========================================================= */
+========================================================= */
 
 .map-section {
-
-    position: relative;
-
     width: 100%;
 
     background: #1b2230;
@@ -521,7 +516,8 @@ h1 {
 
     margin-top: 20px;
 
-    overflow: hidden;
+    /* Jangan mengganggu Leaflet */
+    position: relative;
 }
 
 
@@ -530,7 +526,6 @@ h1 {
 ========================================================= */
 
 .map-header {
-
     width: 100%;
 
     display: flex;
@@ -545,12 +540,10 @@ h1 {
 }
 
 .map-header > div {
-
     min-width: 0;
 }
 
 .map-header h2 {
-
     margin: 0 0 5px 0;
 
     text-align: left;
@@ -561,7 +554,6 @@ h1 {
 }
 
 .map-header p {
-
     margin: 0;
 
     color: #7f8a9a;
@@ -573,11 +565,10 @@ h1 {
 
 
 /* =========================================================
-   MAP REFRESH
+   REFRESH BUTTON
 ========================================================= */
 
 .map-refresh {
-
     flex-shrink: 0;
 
     border: none;
@@ -614,13 +605,22 @@ h1 {
    LEAFLET MAP
 ========================================================= */
 
-#radMap {
+/*
+   INI BAGIAN PALING PENTING
+*/
 
-    position: relative;
+#radMap {
+    display: block;
 
     width: 100%;
 
     height: 430px;
+
+    min-height: 430px;
+
+    margin: 0;
+
+    padding: 0;
 
     background: #dbe3ef;
 
@@ -630,248 +630,40 @@ h1 {
 
     overflow: hidden;
 
-    isolation: isolate;
+    position: relative;
 }
 
 
-/* =========================================================
-   LEAFLET CONTAINER
-========================================================= */
+/*
+   Biarkan Leaflet mengatur semua
+   elemen internalnya sendiri.
+*/
 
-#radMap.leaflet-container {
-
+#radMap .leaflet-container {
     width: 100%;
 
     height: 100%;
-
-    background: #dbe3ef;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size: 12px;
 }
 
-
-/* =========================================================
-   LEAFLET CORE FIX
-========================================================= */
 
 /*
-   BAGIAN INI SENGAJA DITULIS DI SINI
-   agar peta tetap aman apabila leaflet.css
-   tidak berhasil dimuat.
+   CSS global sering membuat gambar menjadi
+   max-width: 100%, dan ini bisa merusak tile Leaflet.
 */
 
-#radMap .leaflet-pane,
-#radMap .leaflet-tile,
-#radMap .leaflet-marker-icon,
-#radMap .leaflet-marker-shadow,
-#radMap .leaflet-overlay-pane,
-#radMap .leaflet-shadow-pane,
-#radMap .leaflet-marker-pane,
-#radMap .leaflet-tooltip-pane,
-#radMap .leaflet-popup-pane {
-
-    position: absolute;
-
-    left: 0;
-
-    top: 0;
-}
-
-
-/* =========================================================
-   LEAFLET TILE
-========================================================= */
-
-#radMap .leaflet-tile-pane {
-
-    z-index: 2;
-}
-
-#radMap .leaflet-tile-container {
-
-    position: absolute;
-
-    left: 0;
-
-    top: 0;
-}
-
-#radMap .leaflet-tile {
-
-    width: 256px;
-
-    height: 256px;
-
+#radMap img.leaflet-tile {
     max-width: none !important;
 
     max-height: none !important;
-
-    border: 0;
-
-    margin: 0;
-
-    padding: 0;
-
-    display: block;
-
-    user-select: none;
-
-    -webkit-user-drag: none;
 }
 
 
-/* =========================================================
-   LEAFLET PANES
-========================================================= */
-
-#radMap .leaflet-map-pane {
-    position: absolute;
-
-    left: 0;
-
-    top: 0;
-}
-
-#radMap .leaflet-overlay-pane {
-    z-index: 4;
-}
-
-#radMap .leaflet-shadow-pane {
-    z-index: 5;
-}
-
-#radMap .leaflet-marker-pane {
-    z-index: 6;
-}
-
-#radMap .leaflet-tooltip-pane {
-    z-index: 7;
-}
-
-#radMap .leaflet-popup-pane {
-    z-index: 8;
-}
-
-
-/* =========================================================
-   LEAFLET SVG
-========================================================= */
+/* SVG marker / jalur */
 
 #radMap svg {
-
     max-width: none !important;
 
     max-height: none !important;
-}
-
-
-/* =========================================================
-   LEAFLET CONTROLS
-========================================================= */
-
-#radMap .leaflet-control {
-
-    position: relative;
-
-    z-index: 1000;
-}
-
-#radMap .leaflet-top,
-#radMap .leaflet-bottom {
-
-    position: absolute;
-
-    z-index: 1000;
-
-    pointer-events: none;
-}
-
-#radMap .leaflet-top {
-    top: 0;
-}
-
-#radMap .leaflet-bottom {
-    bottom: 0;
-}
-
-#radMap .leaflet-left {
-    left: 0;
-}
-
-#radMap .leaflet-right {
-    right: 0;
-}
-
-#radMap .leaflet-top .leaflet-control,
-#radMap .leaflet-bottom .leaflet-control {
-
-    pointer-events: auto;
-}
-
-
-/* =========================================================
-   ZOOM BUTTON
-========================================================= */
-
-#radMap .leaflet-control-zoom {
-
-    border: none;
-
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-#radMap .leaflet-control-zoom a {
-
-    width: 30px;
-
-    height: 30px;
-
-    line-height: 28px;
-
-    background: #1b2230;
-
-    color: #ffffff;
-
-    border-color: #374151;
-
-    text-align: center;
-}
-
-#radMap .leaflet-control-zoom a:hover {
-
-    background: #2563eb;
-
-    color: #ffffff;
-}
-
-
-/* =========================================================
-   LEAFLET POPUP
-========================================================= */
-
-#radMap .leaflet-popup-content-wrapper {
-
-    border-radius: 10px;
-}
-
-#radMap .leaflet-popup-content {
-
-    margin: 12px 14px;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size: 13px;
-
-    line-height: 1.6;
 }
 
 
@@ -880,7 +672,6 @@ h1 {
 ========================================================= */
 
 .map-legend {
-
     display: flex;
 
     align-items: center;
@@ -897,14 +688,12 @@ h1 {
 }
 
 .map-legend span {
-
     display: inline-flex;
 
     align-items: center;
 }
 
 .legend-dot {
-
     display: inline-block;
 
     width: 10px;
@@ -931,11 +720,68 @@ h1 {
 }
 
 .legend-dot.latest {
-
     background: #2563eb;
 
     box-shadow:
         0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+
+/* =========================================================
+   MOBILE MAP
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .map-section {
+        padding: 15px;
+    }
+
+    .map-header {
+        align-items: flex-start;
+    }
+
+    .map-header h2 {
+        font-size: 20px;
+    }
+
+    .map-header p {
+        font-size: 12px;
+    }
+
+    .map-refresh {
+        padding: 9px 12px;
+
+        font-size: 12px;
+    }
+
+    #radMap {
+        height: 350px;
+
+        min-height: 350px;
+    }
+}
+
+
+@media (max-width: 450px) {
+
+    .map-header {
+        flex-direction: column;
+    }
+
+    .map-refresh {
+        width: 100%;
+    }
+
+    #radMap {
+        height: 320px;
+
+        min-height: 320px;
+    }
+
+    .map-legend {
+        gap: 10px;
+    }
 }
 
 
