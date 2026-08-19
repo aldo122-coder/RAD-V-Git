@@ -28,6 +28,10 @@ function initRadiationMap() {
 
     radMap = L.map("radMap").setView([-5.4, 105.25], 15);
 
+    setTimeout(() => {
+    radMap.invalidateSize();
+}, 500);
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 20,
         attribution: '&copy; OpenStreetMap contributors'
