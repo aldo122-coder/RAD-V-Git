@@ -1,4 +1,98 @@
 // ==========================================
+// RAD-V PIN SECURITY
+// ==========================================
+
+const RADV_PIN = "1234";
+
+let radVAuthenticated = false;
+
+
+// ==========================================
+// CEK PIN
+// ==========================================
+
+function checkPIN() {
+
+    const pinInput =
+        document.getElementById("pinInput");
+
+    const pinScreen =
+        document.getElementById("pinScreen");
+
+    const pinError =
+        document.getElementById("pinError");
+
+
+    if (!pinInput || !pinScreen) {
+        return;
+    }
+
+
+    const enteredPIN =
+        pinInput.value.trim();
+
+
+    if (enteredPIN === RADV_PIN) {
+
+        // ==================================
+        // PIN BENAR
+        // ==================================
+
+        radVAuthenticated = true;
+
+
+        // Hilangkan layar PIN
+        pinScreen.style.display = "none";
+
+
+        if (pinError) {
+            pinError.textContent = "";
+        }
+
+
+        pinInput.value = "";
+
+
+        // ==================================
+        // BARU CONNECT MQTT
+        // ==================================
+
+        connectMQTT();
+
+
+        console.log(
+            "RAD-V: Akses diterima"
+        );
+
+    } else {
+
+        // ==================================
+        // PIN SALAH
+        // ==================================
+
+        radVAuthenticated = false;
+
+
+        pinInput.value = "";
+
+
+        if (pinError) {
+
+            pinError.textContent =
+                "PIN salah. Silakan coba lagi.";
+        }
+
+
+        pinInput.focus();
+
+
+        console.log(
+            "RAD-V: PIN salah"
+        );
+    }
+}
+
+// ==========================================
 // MQTT
 // ==========================================
 
@@ -169,12 +263,28 @@ function pressControl(
 ) {
 
     if (event) {
-
         event.preventDefault();
     }
 
 
-    // Mencegah perintah berulang
+    // ==================================
+    // CEK PIN
+    // ==================================
+
+    if (!radVAuthenticated) {
+
+        console.warn(
+            "Kontrol terkunci. Masukkan PIN."
+        );
+
+        return;
+    }
+
+
+    // ==================================
+    // CEGAH PERINTAH BERULANG
+    // ==================================
+
     if (
         activeControl === command
     ) {
@@ -192,10 +302,13 @@ function pressControl(
     );
 
 
-    // Tampilan tombol
+    // ==================================
+    // TAMPILAN TOMBOL
+    // ==================================
+
     const buttons =
         document.querySelectorAll(
-            ".control-btn"
+            ".control-button"
         );
 
 
@@ -205,6 +318,7 @@ function pressControl(
             button.classList.remove(
                 "active"
             );
+
         }
     );
 
@@ -230,7 +344,6 @@ function pressControl(
     }
 }
 
-
 // ==========================================
 // LEPAS TOMBOL
 // ==========================================
@@ -240,12 +353,15 @@ function releaseControl(
 ) {
 
     if (event) {
-
         event.preventDefault();
     }
 
 
-    // Kalau tidak sedang menekan
+    if (!radVAuthenticated) {
+        return;
+    }
+
+
     if (
         activeControl === null
     ) {
@@ -265,7 +381,7 @@ function releaseControl(
 
     const buttons =
         document.querySelectorAll(
-            ".control-btn"
+            ".control-button"
         );
 
 
@@ -275,6 +391,7 @@ function releaseControl(
             button.classList.remove(
                 "active"
             );
+
         }
     );
 
@@ -299,7 +416,15 @@ function releaseControl(
 
 function sendRTB() {
 
-    // RTB hanya sekali tekan
+    if (!radVAuthenticated) {
+
+        console.warn(
+            "RTB terkunci. Masukkan PIN."
+        );
+
+        return;
+    }
+
 
     sendMQTT(
         CONTROL_TOPIC,
@@ -320,12 +445,15 @@ function sendRTB() {
     }
 }
 
-
 // ==========================================
 // SWITCH 1
 // ==========================================
 
 function switch1Jalan() {
+
+    if (!radVAuthenticated) {
+        return;
+    }
 
     sendMQTT(
         SWITCH1_TOPIC,
@@ -335,6 +463,10 @@ function switch1Jalan() {
 
 
 function switch1Stop() {
+
+    if (!radVAuthenticated) {
+        return;
+    }
 
     sendMQTT(
         SWITCH1_TOPIC,
@@ -349,6 +481,10 @@ function switch1Stop() {
 
 function switch2Mengukur() {
 
+    if (!radVAuthenticated) {
+        return;
+    }
+
     sendMQTT(
         SWITCH2_TOPIC,
         "MENGUKUR"
@@ -357,6 +493,10 @@ function switch2Mengukur() {
 
 
 function switch2Selesai() {
+
+    if (!radVAuthenticated) {
+        return;
+    }
 
     sendMQTT(
         SWITCH2_TOPIC,
@@ -368,5 +508,3 @@ function switch2Selesai() {
 // ==========================================
 // MQTT START
 // ==========================================
-
-connectMQTT();
