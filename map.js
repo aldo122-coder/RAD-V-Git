@@ -12,7 +12,7 @@
  */
 
 const SPREADSHEET_ID = "1xLhZmmkAYq8_xfaccntf8GUCx0XZZ8y9Rn7KZ0Ob_2U";
-const SHEET_NAME = "Sheet1";
+const SHEET_NAME = "data";
 const REFRESH_INTERVAL = 10000; // 10 detik
 
 let radMap = null;
@@ -145,21 +145,35 @@ async function loadRadiationMap() {
         const headers = data.table.cols.map(col => col.label || col.id);
 
         const latIndex = findColumn(headers, [
-            "latitude", "lat", "latitude gps", "gps latitude"
-        ]);
+    "latitude",
+    "lat",
+    "latitude gps",
+    "gps latitude"
+]);
 
-        const lonIndex = findColumn(headers, [
-            "longitude", "lon", "lng", "longitude gps", "gps longitude"
-        ]);
+const lonIndex = findColumn(headers, [
+    "longitude",
+    "lon",
+    "lng",
+    "longitude gps",
+    "gps longitude"
+]);
 
-        const usvIndex = findColumn(headers, [
-            "usv/h", "usv", "μsv/h", "µsv/h", "radiation"
-        ]);
+const usvIndex = findColumn(headers, [
+    "uSv/h",
+    "usv/h",
+    "usv",
+    "μSv/h",
+    "µSv/h",
+    "radiation"
+]);
 
-        const cpmIndex = findColumn(headers, [
-            "cpm", "counts per minute"
-        ]);
-
+const cpmIndex = findColumn(headers, [
+    "CPM",
+    "cpm",
+    "counts per minute"
+]);
+        
         if (latIndex === -1 || lonIndex === -1) {
             throw new Error(
                 "Kolom Latitude/Longitude tidak ditemukan. " +
