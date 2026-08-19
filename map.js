@@ -1,313 +1,409 @@
-/*
- * RAD-V GPS MAPPING
- * Membaca koordinat Latitude/Longitude dari Google Spreadsheet
- * lalu menampilkannya sebagai marker + jalur perjalanan.
- *
- * Spreadsheet:
- * https://docs.google.com/spreadsheets/d/1xLhZmmkAYq8_xfaccntf8GUCx0XZZ8y9Rn7KZ0Ob_2U/
- *
- * Catatan:
- * - Sheet harus dapat dibaca oleh publik / "Publish to web".
- * - Nama sheet default: Sheet1. Jika berbeda, ubah SHEET_NAME.
- */
+/* =========================================================
+   RAD-V GPS MAPPING
+   Google Spreadsheet -> Leaflet Map + Table
+========================================================= */
 
-const SPREADSHEET_ID = "1xLhZmmkAYq8_xfaccntf8GUCx0XZZ8y9Rn7KZ0Ob_2U";
+const SPREADSHEET_ID =
+    "1xLhZmmkAYq8_xfaccntf8GUCx0XZZ8y9Rn7KZ0Ob_2U";
+
 const SHEET_NAME = "data";
+
 const REFRESH_INTERVAL = 10000; // 10 detik
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 let radMap = null;
 let routeLine = null;
 let pointLayer = null;
 let latestMarker = null;
 
+
+/* =========================================================
+   INIT MAP
+========================================================= */
+
 function initRadiationMap() {
+
     if (typeof L === "undefined") {
         console.error("Leaflet belum dimuat.");
         return;
     }
 
-    radMap = L.map("radMap").setView([-5.4, 105.25], 15);
+    const mapElement = document.getElementById("radMap");
 
-    setTimeout(() => {
-    radMap.invalidateSize();
-}, 500);
+    if (!mapElement) {
+        console.error("Element #radMap tidak ditemukan.");
+        return;
+    }
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 20,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(radMap);
+    /* -----------------------------------------
+       Buat peta
+    ----------------------------------------- */
+
+    radMap = L.map("radMap", {
+        zoomControl: true,
+        attributionControl: true
+    }).setView([-5.4, 105.25], 15);
+
+
+    /* -----------------------------------------
+       OpenStreetMap
+    ----------------------------------------- */
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 20,
+            attribution: "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(radMap);
+
+
+    /* -----------------------------------------
+       Layer marker
+    ----------------------------------------- */
 
     pointLayer = L.layerGroup().addTo(radMap);
 
+
+    /* -----------------------------------------
+       Pastikan ukuran peta benar
+    ----------------------------------------- */
+
+    setTimeout(() => {
+
+        if (radMap) {
+            radMap.invalidateSize();
+        }
+
+    }, 500);
+
+
+    /* -----------------------------------------
+       Load pertama
+    ----------------------------------------- */
+
     loadRadiationMap();
-    setInterval(loadRadiationMap, REFRESH_INTERVAL);
+
+
+    /* -----------------------------------------
+       Auto refresh
+    ----------------------------------------- */
+
+    setInterval(() => {
+
+        loadRadiationMap();
+
+    }, REFRESH_INTERVAL);
 }
+
+
+/* =========================================================
+   GOOGLE GVIZ URL
+========================================================= */
 
 function getGvizUrl() {
-    return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+    return (
+        "https://docs.google.com/spreadsheets/d/" +
+        SPREADSHEET_ID +
+        "/gviz/tq?tqx=out:json&sheet=" +
+        encodeURIComponent(SHEET_NAME)
+    );
 }
 
+
+/* =========================================================
+   NORMALIZE HEADER
+========================================================= */
+
 function normalizeHeader(value) {
+
     return String(value || "")
         .toLowerCase()
         .trim()
         .replace(/[^\w]/g, "");
 }
 
+
+/* =========================================================
+   FIND COLUMN
+========================================================= */
+
 function findColumn(headers, aliases) {
-    const normalized = headers.map(normalizeHeader);
+
+    const normalizedHeaders =
+        headers.map(normalizeHeader);
+
+
+    /* -----------------------------------------
+       Cocok persis
+    ----------------------------------------- */
 
     for (const alias of aliases) {
-        const index = normalized.indexOf(normalizeHeader(alias));
-        if (index !== -1) return index;
+
+        const normalizedAlias =
+            normalizeHeader(alias);
+
+        const index =
+            normalizedHeaders.indexOf(normalizedAlias);
+
+        if (index !== -1) {
+            return index;
+        }
     }
 
-    // Pencarian sebagian untuk variasi seperti "Latitude GPS"
-    for (let i = 0; i < normalized.length; i++) {
+
+    /* -----------------------------------------
+       Cocok sebagian
+    ----------------------------------------- */
+
+    for (let i = 0; i < normalizedHeaders.length; i++) {
+
         for (const alias of aliases) {
-            const a = normalizeHeader(alias);
-            if (a && normalized[i].includes(a)) return i;
+
+            const normalizedAlias =
+                normalizeHeader(alias);
+
+            if (
+                normalizedAlias &&
+                normalizedHeaders[i].includes(normalizedAlias)
+            ) {
+                return i;
+            }
         }
     }
 
     return -1;
 }
 
+
+/* =========================================================
+   PARSE GOOGLE GVIZ
+========================================================= */
+
 function parseGvizResponse(text) {
+
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
 
     if (start === -1 || end === -1) {
-        throw new Error("Format data Google Spreadsheet tidak dikenali.");
+
+        throw new Error(
+            "Format data Google Spreadsheet tidak dikenali."
+        );
     }
 
-    return JSON.parse(text.substring(start, end + 1));
+    return JSON.parse(
+        text.substring(start, end + 1)
+    );
 }
 
+
+/* =========================================================
+   GET CELL VALUE
+========================================================= */
+
 function valueFromCell(row, index) {
-    if (index < 0 || !row.c || !row.c[index]) return null;
+
+    if (
+        index < 0 ||
+        !row ||
+        !row.c ||
+        !row.c[index]
+    ) {
+        return null;
+    }
+
     return row.c[index].v;
 }
 
-function radiationLevel(usv) {
-    if (!Number.isFinite(usv)) return "unknown";
 
-    // Ambang tampilan dapat disesuaikan dengan kriteria penelitian.
-    if (usv < 0.3) return "safe";
-    if (usv < 1.0) return "medium";
+/* =========================================================
+   FORMAT TIMESTAMP
+========================================================= */
+
+/*
+   Google Visualization sering mengirim tanggal seperti:
+
+   Date(2026,2,1,15,7,44)
+
+   Perlu diperhatikan:
+   bulan Google dimulai dari 0.
+
+   0 = Januari
+   1 = Februari
+   2 = Maret
+   dst.
+
+   Hasil:
+
+   01 Maret 2026, 15:07:44
+*/
+
+function formatTimestamp(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "";
+    }
+
+
+    const text =
+        String(value).trim();
+
+
+    /* -----------------------------------------
+       Format Google Date(...)
+    ----------------------------------------- */
+
+    const match =
+        text.match(
+            /^Date\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/
+        );
+
+
+    if (match) {
+
+        const year =
+            Number(match[1]);
+
+        const month =
+            Number(match[2]);
+
+        const day =
+            Number(match[3]);
+
+        const hour =
+            Number(match[4]);
+
+        const minute =
+            Number(match[5]);
+
+        const second =
+            Number(match[6]);
+
+
+        const months = [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember"
+        ];
+
+
+        const monthName =
+            months[month] || "";
+
+
+        return (
+            String(day).padStart(2, "0") +
+            " " +
+            monthName +
+            " " +
+            year +
+            ", " +
+            String(hour).padStart(2, "0") +
+            ":" +
+            String(minute).padStart(2, "0") +
+            ":" +
+            String(second).padStart(2, "0")
+        );
+    }
+
+
+    /* -----------------------------------------
+       Jika bukan format Date(...)
+    ----------------------------------------- */
+
+    return text;
+}
+
+
+/* =========================================================
+   FORMAT CELL
+========================================================= */
+
+function formatCellValue(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value);
+}
+
+
+/* =========================================================
+   RADIATION LEVEL
+========================================================= */
+
+function radiationLevel(usv) {
+
+    if (!Number.isFinite(usv)) {
+        return "unknown";
+    }
+
+
+    if (usv < 0.3) {
+        return "safe";
+    }
+
+
+    if (usv < 1.0) {
+        return "medium";
+    }
+
+
     return "high";
 }
 
+
+/* =========================================================
+   MARKER COLOR
+========================================================= */
+
 function markerColor(level) {
-    if (level === "safe") return "#22c55e";
-    if (level === "medium") return "#f59e0b";
-    if (level === "high") return "#ef4444";
+
+    if (level === "safe") {
+        return "#22c55e";
+    }
+
+    if (level === "medium") {
+        return "#f59e0b";
+    }
+
+    if (level === "high") {
+        return "#ef4444";
+    }
+
     return "#6b7280";
 }
 
-function makeMarker(lat, lon, usv, cpm, isLatest) {
-    const level = radiationLevel(usv);
-    const color = isLatest ? "#2563eb" : markerColor(level);
 
-    const marker = L.circleMarker([lat, lon], {
-        radius: isLatest ? 9 : 5,
-        color: color,
-        weight: isLatest ? 3 : 1,
-        fillColor: color,
-        fillOpacity: 0.8
-    });
-
-    marker.bindPopup(`
-        <div style="min-width:170px">
-            <b>RAD-V</b><br>
-            Latitude: ${lat.toFixed(6)}<br>
-            Longitude: ${lon.toFixed(6)}<br>
-            μSv/h: ${Number.isFinite(usv) ? usv.toFixed(3) : "-"}<br>
-            CPM: ${Number.isFinite(cpm) ? cpm.toFixed(0) : "-"}
-            ${isLatest ? "<br><b>● POSISI TERBARU</b>" : ""}
-        </div>
-    `);
-
-    return marker;
-}
-
-async function loadRadiationMap() {
-    const info = document.getElementById("mapInfo");
-
-    try {
-        info.textContent = "Mengambil data GPS...";
-
-        const response = await fetch(getGvizUrl(), { cache: "no-store" });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        const text = await response.text();
-        const data = parseGvizResponse(text);
-
-        const headers = data.table.cols.map(col => col.label || col.id);
-
-        const latIndex = findColumn(headers, [
-    "latitude",
-    "lat",
-    "latitude gps",
-    "gps latitude"
-]);
-
-const lonIndex = findColumn(headers, [
-    "longitude",
-    "lon",
-    "lng",
-    "longitude gps",
-    "gps longitude"
-]);
-
-const usvIndex = findColumn(headers, [
-    "uSv/h",
-    "usv/h",
-    "usv",
-    "μSv/h",
-    "µSv/h",
-    "radiation"
-]);
-
-const cpmIndex = findColumn(headers, [
-    "CPM",
-    "cpm",
-    "counts per minute"
-]);
-
-        if (latIndex === -1 || lonIndex === -1) {
-            throw new Error(
-                "Kolom Latitude/Longitude tidak ditemukan. " +
-                "Pastikan header Spreadsheet memakai Latitude dan Longitude."
-            );
-        }
-
-        const points = [];
-        const pointByRowIndex = {};
-
-        for (let rowIndex = 0; rowIndex < data.table.rows.length; rowIndex++) {
-            const row = data.table.rows[rowIndex];
-            const lat = Number(valueFromCell(row, latIndex));
-            const lon = Number(valueFromCell(row, lonIndex));
-            const usv = Number(valueFromCell(row, usvIndex));
-            const cpm = Number(valueFromCell(row, cpmIndex));
-
-            if (
-                Number.isFinite(lat) &&
-                Number.isFinite(lon) &&
-                lat >= -90 && lat <= 90 &&
-                lon >= -180 && lon <= 180 &&
-                !(lat === 0 && lon === 0)
-            ) {
-                const point = {
-                    lat,
-                    lon,
-                    usv: Number.isFinite(usv) ? usv : NaN,
-                    cpm: Number.isFinite(cpm) ? cpm : NaN
-                };
-
-                points.push(point);
-                pointByRowIndex[rowIndex] = point;
-            }
-        }
-
-        // Tampilkan seluruh isi Spreadsheet pada tabel, termasuk baris yang
-        // belum mempunyai koordinat valid.
-        window.radVPointByRowIndex = pointByRowIndex;
-
-        updateTableOnly(
-            data,
-            headers,
-            latIndex,
-            lonIndex,
-            usvIndex,
-            cpmIndex,
-            points
-        );
-
-        if (points.length === 0) {
-            info.textContent = "Belum ada koordinat GPS yang valid.";
-            return;
-        }
-
-        pointLayer.clearLayers();
-
-        const latLngs = points.map(p => [p.lat, p.lon]);
-
-        routeLine = L.polyline(latLngs, {
-            color: "#2563eb",
-            weight: 4,
-            opacity: 0.7
-        }).addTo(radMap);
-
-        points.forEach((p, index) => {
-            const marker = makeMarker(
-                p.lat,
-                p.lon,
-                p.usv,
-                p.cpm,
-                index === points.length - 1
-            );
-            marker.addTo(pointLayer);
-        });
-
-        const latest = points[points.length - 1];
-
-        if (latestMarker) {
-            radMap.removeLayer(latestMarker);
-        }
-
-        latestMarker = L.circleMarker([latest.lat, latest.lon], {
-            radius: 12,
-            color: "#2563eb",
-            weight: 3,
-            fillColor: "#2563eb",
-            fillOpacity: 0.15
-        }).addTo(radMap);
-
-        latestMarker.bindPopup(`
-            <b>POSISI TERBARU RAD-V</b><br>
-            Latitude: ${latest.lat.toFixed(6)}<br>
-            Longitude: ${latest.lon.toFixed(6)}<br>
-            μSv/h: ${Number.isFinite(latest.usv) ? latest.usv.toFixed(3) : "-"}<br>
-            CPM: ${Number.isFinite(latest.cpm) ? latest.cpm.toFixed(0) : "-"}
-        `);
-
-        // Update kartu GPS pada dashboard menggunakan data terbaru.
-        const latEl = document.getElementById("latitude");
-        const lonEl = document.getElementById("longitude");
-        const usvEl = document.getElementById("usv");
-        const cpmEl = document.getElementById("cpm");
-
-        if (latEl) latEl.textContent = latest.lat.toFixed(6);
-        if (lonEl) lonEl.textContent = latest.lon.toFixed(6);
-        if (usvEl && Number.isFinite(latest.usv)) usvEl.textContent = latest.usv.toFixed(2);
-        if (cpmEl && Number.isFinite(latest.cpm)) cpmEl.textContent = latest.cpm.toFixed(0);
-
-        // Fokus ke seluruh jalur jika baru pertama kali dimuat.
-        if (!radMap._radVHasFitted) {
-            radMap.fitBounds(L.latLngBounds(latLngs), {
-                padding: [30, 30]
-            });
-            radMap._radVHasFitted = true;
-        }
-
-        info.textContent =
-            `${points.length} titik GPS | Posisi terbaru: ` +
-            `${latest.lat.toFixed(6)}, ${latest.lon.toFixed(6)} | ` +
-            `Update otomatis ${REFRESH_INTERVAL / 1000} detik`;
-    } catch (error) {
-        console.error("RAD-V Mapping Error:", error);
-        info.textContent =
-            "Gagal mengambil data. Pastikan Spreadsheet dapat diakses publik.";
-    }
-}
-
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
 
 function escapeHtml(value) {
+
     return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -316,123 +412,1052 @@ function escapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
-function formatCellValue(value) {
-    if (value === null || value === undefined) return "";
-    return String(value);
+
+/* =========================================================
+   CREATE MARKER
+========================================================= */
+
+function makeMarker(
+    lat,
+    lon,
+    usv,
+    cpm,
+    isLatest
+) {
+
+    const level =
+        radiationLevel(usv);
+
+
+    const color =
+        isLatest
+            ? "#2563eb"
+            : markerColor(level);
+
+
+    const marker =
+        L.circleMarker(
+            [lat, lon],
+            {
+                radius: isLatest ? 9 : 5,
+
+                color: color,
+
+                weight: isLatest ? 3 : 1,
+
+                fillColor: color,
+
+                fillOpacity: 0.8
+            }
+        );
+
+
+    marker.bindPopup(`
+
+        <div style="min-width:180px">
+
+            <strong>☢️ RAD-V</strong>
+
+            <br>
+
+            Latitude:
+            ${lat.toFixed(6)}
+
+            <br>
+
+            Longitude:
+            ${lon.toFixed(6)}
+
+            <br>
+
+            μSv/h:
+            ${
+                Number.isFinite(usv)
+                    ? usv.toFixed(3)
+                    : "-"
+            }
+
+            <br>
+
+            CPM:
+            ${
+                Number.isFinite(cpm)
+                    ? cpm.toFixed(2)
+                    : "-"
+            }
+
+            ${
+                isLatest
+                    ? "<br><strong>🔵 POSISI TERBARU</strong>"
+                    : ""
+            }
+
+        </div>
+
+    `);
+
+
+    return marker;
 }
 
-function renderSpreadsheetTable(headers, rows, latIndex, lonIndex, usvIndex, cpmIndex, points) {
-    const head = document.getElementById("radiationTableHead");
-    const body = document.getElementById("radiationTableBody");
-    const info = document.getElementById("tableInfo");
 
-    if (!head || !body) return;
+/* =========================================================
+   LOAD DATA SPREADSHEET
+========================================================= */
 
-    head.innerHTML = `
-        <tr>
-            <th>No.</th>
-            ${headers.map(h => `<th>${escapeHtml(h || "-")}</th>`).join("")}
-            <th>Peta</th>
-        </tr>
-    `;
+async function loadRadiationMap() {
 
-    body.innerHTML = "";
+    const mapInfo =
+        document.getElementById("mapInfo");
 
-    if (!rows.length) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="${headers.length + 2}" class="table-empty">
-                    Belum ada data pada Google Spreadsheet.
-                </td>
-            </tr>
-        `;
-        info.textContent = "0 data";
+    const tableInfo =
+        document.getElementById("tableInfo");
+
+
+    try {
+
+        if (mapInfo) {
+            mapInfo.textContent =
+                "Mengambil data GPS...";
+        }
+
+
+        const response =
+            await fetch(
+                getGvizUrl(),
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        const text =
+            await response.text();
+
+
+        const data =
+            parseGvizResponse(text);
+
+
+        if (
+            !data.table ||
+            !data.table.cols ||
+            !data.table.rows
+        ) {
+
+            throw new Error(
+                "Data Spreadsheet kosong atau tidak valid."
+            );
+        }
+
+
+        /* -----------------------------------------
+           HEADER
+        ----------------------------------------- */
+
+        const headers =
+            data.table.cols.map(
+                col =>
+                    col.label ||
+                    col.id ||
+                    ""
+            );
+
+
+        /* -----------------------------------------
+           CARI KOLOM
+        ----------------------------------------- */
+
+        const timestampIndex =
+            findColumn(
+                headers,
+                [
+                    "timestamp",
+                    "time",
+                    "waktu",
+                    "tanggal",
+                    "date"
+                ]
+            );
+
+
+        const latIndex =
+            findColumn(
+                headers,
+                [
+                    "latitude",
+                    "lat",
+                    "latitude gps",
+                    "gps latitude"
+                ]
+            );
+
+
+        const lonIndex =
+            findColumn(
+                headers,
+                [
+                    "longitude",
+                    "lon",
+                    "lng",
+                    "longitude gps",
+                    "gps longitude"
+                ]
+            );
+
+
+        const usvIndex =
+            findColumn(
+                headers,
+                [
+                    "uSv/h",
+                    "usv/h",
+                    "usv",
+                    "μSv/h",
+                    "µSv/h",
+                    "radiation"
+                ]
+            );
+
+
+        const cpmIndex =
+            findColumn(
+                headers,
+                [
+                    "CPM",
+                    "cpm",
+                    "counts per minute"
+                ]
+            );
+
+
+        /* -----------------------------------------
+           VALIDASI GPS
+        ----------------------------------------- */
+
+        if (
+            latIndex === -1 ||
+            lonIndex === -1
+        ) {
+
+            throw new Error(
+                "Kolom Latitude / Longitude tidak ditemukan."
+            );
+        }
+
+
+        /* -----------------------------------------
+           POINT DATA
+        ----------------------------------------- */
+
+        const points = [];
+
+        const pointByRowIndex = {};
+
+
+        for (
+            let rowIndex = 0;
+            rowIndex < data.table.rows.length;
+            rowIndex++
+        ) {
+
+            const row =
+                data.table.rows[rowIndex];
+
+
+            const lat =
+                Number(
+                    valueFromCell(
+                        row,
+                        latIndex
+                    )
+                );
+
+
+            const lon =
+                Number(
+                    valueFromCell(
+                        row,
+                        lonIndex
+                    )
+                );
+
+
+            const usv =
+                Number(
+                    valueFromCell(
+                        row,
+                        usvIndex
+                    )
+                );
+
+
+            const cpm =
+                Number(
+                    valueFromCell(
+                        row,
+                        cpmIndex
+                    )
+                );
+
+
+            if (
+                Number.isFinite(lat) &&
+                Number.isFinite(lon) &&
+                lat >= -90 &&
+                lat <= 90 &&
+                lon >= -180 &&
+                lon <= 180 &&
+                !(lat === 0 && lon === 0)
+            ) {
+
+                const point = {
+
+                    lat: lat,
+
+                    lon: lon,
+
+                    usv:
+                        Number.isFinite(usv)
+                            ? usv
+                            : NaN,
+
+                    cpm:
+                        Number.isFinite(cpm)
+                            ? cpm
+                            : NaN
+                };
+
+
+                points.push(point);
+
+
+                pointByRowIndex[rowIndex] =
+                    point;
+            }
+        }
+
+
+        window.radVPointByRowIndex =
+            pointByRowIndex;
+
+
+        /* -----------------------------------------
+           UPDATE TABLE
+        ----------------------------------------- */
+
+        renderSpreadsheetTable(
+            headers,
+            data.table.rows,
+            timestampIndex,
+            latIndex,
+            lonIndex,
+            usvIndex,
+            cpmIndex,
+            points
+        );
+
+
+        /* -----------------------------------------
+           TIDAK ADA GPS
+        ----------------------------------------- */
+
+        if (points.length === 0) {
+
+            if (mapInfo) {
+
+                mapInfo.textContent =
+                    "Belum ada koordinat GPS yang valid.";
+            }
+
+            return;
+        }
+
+
+        /* -----------------------------------------
+           CLEAR LAYER
+        ----------------------------------------- */
+
+        if (pointLayer) {
+            pointLayer.clearLayers();
+        }
+
+
+        if (routeLine) {
+
+            radMap.removeLayer(
+                routeLine
+            );
+
+            routeLine = null;
+        }
+
+
+        /* -----------------------------------------
+           KOORDINAT
+        ----------------------------------------- */
+
+        const latLngs =
+            points.map(
+                point => [
+                    point.lat,
+                    point.lon
+                ]
+            );
+
+
+        /* -----------------------------------------
+           ROUTE LINE
+        ----------------------------------------- */
+
+        routeLine =
+            L.polyline(
+                latLngs,
+                {
+                    color: "#2563eb",
+
+                    weight: 4,
+
+                    opacity: 0.7
+                }
+            ).addTo(radMap);
+
+
+        /* -----------------------------------------
+           MARKER
+        ----------------------------------------- */
+
+        points.forEach(
+            (point, index) => {
+
+                const marker =
+                    makeMarker(
+                        point.lat,
+                        point.lon,
+                        point.usv,
+                        point.cpm,
+                        index === points.length - 1
+                    );
+
+
+                marker.addTo(
+                    pointLayer
+                );
+            }
+        );
+
+
+        /* -----------------------------------------
+           DATA TERBARU
+        ----------------------------------------- */
+
+        const latest =
+            points[points.length - 1];
+
+
+        /* -----------------------------------------
+           HAPUS MARKER TERBARU LAMA
+        ----------------------------------------- */
+
+        if (latestMarker) {
+
+            radMap.removeLayer(
+                latestMarker
+            );
+
+            latestMarker = null;
+        }
+
+
+        /* -----------------------------------------
+           LINGKARAN POSISI TERBARU
+        ----------------------------------------- */
+
+        latestMarker =
+            L.circleMarker(
+                [
+                    latest.lat,
+                    latest.lon
+                ],
+                {
+                    radius: 12,
+
+                    color: "#2563eb",
+
+                    weight: 3,
+
+                    fillColor: "#2563eb",
+
+                    fillOpacity: 0.15
+                }
+            ).addTo(radMap);
+
+
+        latestMarker.bindPopup(`
+
+            <strong>🔵 POSISI TERBARU RAD-V</strong>
+
+            <br>
+
+            Latitude:
+            ${latest.lat.toFixed(6)}
+
+            <br>
+
+            Longitude:
+            ${latest.lon.toFixed(6)}
+
+            <br>
+
+            μSv/h:
+            ${
+                Number.isFinite(latest.usv)
+                    ? latest.usv.toFixed(3)
+                    : "-"
+            }
+
+            <br>
+
+            CPM:
+            ${
+                Number.isFinite(latest.cpm)
+                    ? latest.cpm.toFixed(2)
+                    : "-"
+            }
+
+        `);
+
+
+        /* -----------------------------------------
+           UPDATE KARTU DASHBOARD
+        ----------------------------------------- */
+
+        const latEl =
+            document.getElementById(
+                "latitude"
+            );
+
+
+        const lonEl =
+            document.getElementById(
+                "longitude"
+            );
+
+
+        const usvEl =
+            document.getElementById(
+                "usv"
+            );
+
+
+        const cpmEl =
+            document.getElementById(
+                "cpm"
+            );
+
+
+        if (latEl) {
+
+            latEl.textContent =
+                latest.lat.toFixed(6);
+        }
+
+
+        if (lonEl) {
+
+            lonEl.textContent =
+                latest.lon.toFixed(6);
+        }
+
+
+        if (
+            usvEl &&
+            Number.isFinite(latest.usv)
+        ) {
+
+            usvEl.textContent =
+                latest.usv.toFixed(2);
+        }
+
+
+        if (
+            cpmEl &&
+            Number.isFinite(latest.cpm)
+        ) {
+
+            cpmEl.textContent =
+                latest.cpm.toFixed(0);
+        }
+
+
+        /* -----------------------------------------
+           FIT MAP
+        ----------------------------------------- */
+
+        if (!radMap._radVHasFitted) {
+
+            radMap.fitBounds(
+                L.latLngBounds(latLngs),
+                {
+                    padding: [30, 30]
+                }
+            );
+
+
+            radMap._radVHasFitted =
+                true;
+        }
+
+
+        /* -----------------------------------------
+           MAP INFO
+        ----------------------------------------- */
+
+        if (mapInfo) {
+
+            mapInfo.textContent =
+                `${points.length} titik GPS | ` +
+                `Posisi terbaru: ` +
+                `${latest.lat.toFixed(6)}, ` +
+                `${latest.lon.toFixed(6)} | ` +
+                `Update otomatis ` +
+                `${REFRESH_INTERVAL / 1000} detik`;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "RAD-V Mapping Error:",
+            error
+        );
+
+
+        if (mapInfo) {
+
+            mapInfo.textContent =
+                "Gagal mengambil data Spreadsheet.";
+        }
+
+
+        if (tableInfo) {
+
+            tableInfo.textContent =
+                "Gagal mengambil data Spreadsheet.";
+        }
+    }
+}
+
+
+/* =========================================================
+   RENDER TABLE
+========================================================= */
+
+function renderSpreadsheetTable(
+    headers,
+    rows,
+    timestampIndex,
+    latIndex,
+    lonIndex,
+    usvIndex,
+    cpmIndex,
+    points
+) {
+
+    const head =
+        document.getElementById(
+            "radiationTableHead"
+        );
+
+
+    const body =
+        document.getElementById(
+            "radiationTableBody"
+        );
+
+
+    const info =
+        document.getElementById(
+            "tableInfo"
+        );
+
+
+    if (!head || !body) {
         return;
     }
 
-    rows.forEach((row, rowIndex) => {
-        const lat = Number(valueFromCell(row, latIndex));
-        const lon = Number(valueFromCell(row, lonIndex));
-        const usv = Number(valueFromCell(row, usvIndex));
-        const cpm = Number(valueFromCell(row, cpmIndex));
-        const point = window.radVPointByRowIndex
-            ? window.radVPointByRowIndex[rowIndex]
-            : null;
 
-        const latestPoint = points.length ? points[points.length - 1] : null;
-        const isLatest = point && latestPoint &&
-            point.lat === latestPoint.lat &&
-            point.lon === latestPoint.lon &&
-            point === latestPoint;
+    /* -----------------------------------------
+       HEADER
+    ----------------------------------------- */
 
-        const level = radiationLevel(usv);
+    head.innerHTML = `
 
-        const tr = document.createElement("tr");
-        if (isLatest) tr.classList.add("latest-row");
+        <tr>
 
-        const values = headers.map((_, colIndex) => {
-            const value = formatCellValue(valueFromCell(row, colIndex));
+            <th>No.</th>
 
-            let className = "";
-            if (colIndex === usvIndex) {
-                if (level === "safe") className = "radiation-low";
-                if (level === "medium") className = "radiation-medium";
-                if (level === "high") className = "radiation-high";
+            ${headers
+                .map(
+                    header =>
+                        `<th>${escapeHtml(
+                            header || "-"
+                        )}</th>`
+                )
+                .join("")
             }
 
-            return `<td class="${className}">${escapeHtml(value)}</td>`;
-        }).join("");
+            <th>Peta</th>
 
-        tr.innerHTML = `
-            <td>${rowIndex + 1}</td>
-            ${values}
-            <td>
-                ${Number.isFinite(lat) && Number.isFinite(lon)
-                    ? '<button class="table-map-button">📍 LIHAT</button>'
-                    : '-'}
-            </td>
+        </tr>
+    `;
+
+
+    body.innerHTML = "";
+
+
+    /* -----------------------------------------
+       KOSONG
+    ----------------------------------------- */
+
+    if (!rows.length) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="${headers.length + 2}"
+                    class="table-empty"
+                >
+                    Belum ada data pada Google Spreadsheet.
+                </td>
+
+            </tr>
         `;
 
-        tr.addEventListener("click", () => {
-            if (!Number.isFinite(lat) || !Number.isFinite(lon) || !radMap) return;
 
-            radMap.setView([lat, lon], Math.max(radMap.getZoom(), 17));
+        if (info) {
+            info.textContent = "0 data";
+        }
 
-            const marker = makeMarker(
-                lat,
-                lon,
-                Number.isFinite(usv) ? usv : NaN,
-                Number.isFinite(cpm) ? cpm : NaN,
-                isLatest
+        return;
+    }
+
+
+    /* -----------------------------------------
+       ROW
+    ----------------------------------------- */
+
+    rows.forEach(
+        (row, rowIndex) => {
+
+            const lat =
+                Number(
+                    valueFromCell(
+                        row,
+                        latIndex
+                    )
+                );
+
+
+            const lon =
+                Number(
+                    valueFromCell(
+                        row,
+                        lonIndex
+                    )
+                );
+
+
+            const usv =
+                Number(
+                    valueFromCell(
+                        row,
+                        usvIndex
+                    )
+                );
+
+
+            const cpm =
+                Number(
+                    valueFromCell(
+                        row,
+                        cpmIndex
+                    )
+                );
+
+
+            const point =
+                window.radVPointByRowIndex
+                    ? window.radVPointByRowIndex[
+                        rowIndex
+                    ]
+                    : null;
+
+
+            const latestPoint =
+                points.length
+                    ? points[points.length - 1]
+                    : null;
+
+
+            const isLatest =
+                point &&
+                latestPoint &&
+                point === latestPoint;
+
+
+            const level =
+                radiationLevel(usv);
+
+
+            const tr =
+                document.createElement("tr");
+
+
+            if (isLatest) {
+                tr.classList.add(
+                    "latest-row"
+                );
+            }
+
+
+            /* -----------------------------------------
+               CELL DATA
+            ----------------------------------------- */
+
+            const values =
+                headers
+                    .map(
+                        (header, colIndex) => {
+
+                            let value =
+                                formatCellValue(
+                                    valueFromCell(
+                                        row,
+                                        colIndex
+                                    )
+                                );
+
+
+                            /* --------------------------------
+                               FORMAT TIMESTAMP
+                            -------------------------------- */
+
+                            if (
+                                colIndex ===
+                                timestampIndex
+                            ) {
+
+                                value =
+                                    formatTimestamp(
+                                        value
+                                    );
+                            }
+
+
+                            /* --------------------------------
+                               WARNA RADIATION
+                            -------------------------------- */
+
+                            let className = "";
+
+
+                            if (
+                                colIndex ===
+                                usvIndex
+                            ) {
+
+                                if (
+                                    level === "safe"
+                                ) {
+
+                                    className =
+                                        "radiation-low";
+                                }
+
+
+                                if (
+                                    level === "medium"
+                                ) {
+
+                                    className =
+                                        "radiation-medium";
+                                }
+
+
+                                if (
+                                    level === "high"
+                                ) {
+
+                                    className =
+                                        "radiation-high";
+                                }
+                            }
+
+
+                            return `
+
+                                <td class="${className}">
+                                    ${escapeHtml(value)}
+                                </td>
+                            `;
+                        }
+                    )
+                    .join("");
+
+
+            /* -----------------------------------------
+               BUTTON PETA
+            ----------------------------------------- */
+
+            const mapButton =
+                Number.isFinite(lat) &&
+                Number.isFinite(lon)
+
+                    ? `
+                        <button
+                            type="button"
+                            class="table-map-button"
+                        >
+                            📍 LIHAT
+                        </button>
+                    `
+
+                    : "-";
+
+
+            tr.innerHTML = `
+
+                <td>
+                    ${rowIndex + 1}
+                </td>
+
+                ${values}
+
+                <td>
+                    ${mapButton}
+                </td>
+            `;
+
+
+            /* -----------------------------------------
+               CLICK ROW
+            ----------------------------------------- */
+
+            tr.addEventListener(
+                "click",
+                () => {
+
+                    if (
+                        !Number.isFinite(lat) ||
+                        !Number.isFinite(lon) ||
+                        !radMap
+                    ) {
+
+                        return;
+                    }
+
+
+                    /* -------------------------------
+                       Fokus peta
+                    ------------------------------- */
+
+                    radMap.setView(
+                        [lat, lon],
+                        Math.max(
+                            radMap.getZoom(),
+                            17
+                        ),
+                        {
+                            animate: true
+                        }
+                    );
+
+
+                    /* -------------------------------
+                       Marker sementara
+                    ------------------------------- */
+
+                    const marker =
+                        makeMarker(
+                            lat,
+                            lon,
+                            Number.isFinite(usv)
+                                ? usv
+                                : NaN,
+                            Number.isFinite(cpm)
+                                ? cpm
+                                : NaN,
+                            isLatest
+                        );
+
+
+                    marker.addTo(
+                        pointLayer
+                    );
+
+
+                    marker.openPopup();
+
+
+                    /* -------------------------------
+                       Hapus marker setelah 4 detik
+                    ------------------------------- */
+
+                    setTimeout(
+                        () => {
+
+                            if (
+                                pointLayer &&
+                                pointLayer.hasLayer(
+                                    marker
+                                )
+                            ) {
+
+                                pointLayer.removeLayer(
+                                    marker
+                                );
+                            }
+
+                        },
+                        4000
+                    );
+                }
             );
 
-            marker.addTo(pointLayer);
-            marker.openPopup();
 
-            setTimeout(() => {
-                if (pointLayer.hasLayer(marker)) {
-                    pointLayer.removeLayer(marker);
-                }
-            }, 4000);
-        });
-
-        body.appendChild(tr);
-    });
-
-    info.textContent =
-        `${rows.length} data | klik baris untuk melihat posisi pada peta`;
-}
-
-function updateTableOnly(data, headers, latIndex, lonIndex, usvIndex, cpmIndex, points) {
-    renderSpreadsheetTable(
-        headers,
-        data.table.rows,
-        latIndex,
-        lonIndex,
-        usvIndex,
-        cpmIndex,
-        points
+            body.appendChild(tr);
+        }
     );
+
+
+    /* -----------------------------------------
+       TABLE INFO
+    ----------------------------------------- */
+
+    if (info) {
+
+        info.textContent =
+            `${rows.length} data | ` +
+            `klik baris untuk melihat posisi pada peta`;
+    }
 }
 
-document.addEventListener("DOMContentLoaded", initRadiationMap);
+
+/* =========================================================
+   START
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initRadiationMap
+);
