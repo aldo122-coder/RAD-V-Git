@@ -1496,25 +1496,20 @@ body.pin-locked {
 @media (max-width: 700px) {
 
     .table-header {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 10px;
+        flex-direction: column;
+        align-items: stretch;
         width: 100%;
     }
 
     .table-header > div {
-        flex: 1;
+        width: 100%;
         min-width: 0;
     }
 
     .table-header .map-refresh {
-        width: auto;
-        max-width: none;
-        flex-shrink: 0;
-        white-space: nowrap;
-        padding: 9px 12px;
-        font-size: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        flex-shrink: 1;
     }
 }
