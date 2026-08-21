@@ -1551,3 +1551,35 @@ body.pin-locked {
         box-sizing: border-box;
     }
 }
+
+/* =========================================================
+   RAD-V CONTROL DISABLED
+========================================================= */
+
+.control-button:disabled,
+.rtb-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+    transform: none !important;
+}
+
+
+/* SWITCH DISABLED */
+
+.switch.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+/* STATUS PENGUKURAN */
+
+#measurementStatus {
+    color: #f59e0b;
+}
+
+#measurementProgress {
+    color: #22c55e;
+}
