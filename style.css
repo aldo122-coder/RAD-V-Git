@@ -1551,3 +1551,22 @@ body.pin-locked {
         box-sizing: border-box;
     }
 }
+
+/* =========================================================
+   SEMBUNYIKAN KOLOM F DARI TABEL
+========================================================= */
+
+/* No. = 1
+   Timestamp = 2
+   CPM = 3
+   uSv/h = 4
+   Longitude = 5
+   Latitude = 6
+   F = 7
+   Peta = 8
+*/
+
+#radiationTable th:nth-child(7),
+#radiationTable td:nth-child(7) {
+    display: none;
+}
