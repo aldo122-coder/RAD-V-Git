@@ -25,47 +25,52 @@
 
 </head>
 
-<body>
+<body class="pin-locked">
 
-    <!-- =====================================================
-     PIN LOGIN RAD-V
-===================================================== -->
+    <!-- PIN LOGIN -->
+    <div id="pinScreen" class="pin-screen">
 
-<div id="pinScreen" class="pin-screen">
+        <div class="pin-box">
 
-    <div class="pin-box">
+            <div class="pin-icon">☢️</div>
 
-        <div class="pin-icon">☢️</div>
+            <h2>RAD-V</h2>
 
-        <h2>RAD-V</h2>
+            <p>
+                Masukkan PIN untuk mengakses kontrol
+            </p>
 
-        <p>Masukkan PIN untuk mengakses kontrol</p>
+            <input
+                type="password"
+                id="pinInput"
+                class="pin-input"
+                maxlength="4"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                placeholder="PIN"
+                autocomplete="off"
+            >
 
-        <input
-            type="password"
-            id="pinInput"
-            class="pin-input"
-            maxlength="6"
-            inputmode="numeric"
-            placeholder="PIN"
-            autocomplete="off"
-        >
+            <button
+                type="button"
+                class="pin-button"
+                onclick="checkPIN()"
+            >
+                MASUK
+            </button>
 
-        <button
-            type="button"
-            class="pin-button"
-            onclick="checkPIN()"
-        >
-            MASUK
-        </button>
+            <div
+                id="pinError"
+                class="pin-error">
+            </div>
 
-        <div id="pinError" class="pin-error"></div>
+        </div>
 
     </div>
 
-</div>
 
-<div class="container">
+    <!-- DASHBOARD -->
+    <div class="container">
 
     <h1>☢️ RAD-V ☢️</h1>
     <p class="subtitle">Monitoring & Control Dashboard</p>
