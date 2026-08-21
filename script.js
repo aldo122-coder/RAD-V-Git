@@ -83,7 +83,9 @@ function checkPIN() {
     console.log(
         "RAD-V: Akses diterima"
     );
-} else {
+} 
+    
+    else {
 
         // ==================================
         // PIN SALAH
