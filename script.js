@@ -6,6 +6,22 @@ const RADV_PIN = "1234";
 
 let radVAuthenticated = false;
 
+// ==========================================
+// LOCK HALAMAN SAAT AWAL
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.body.classList.add("pin-locked");
+
+    const pinInput =
+        document.getElementById("pinInput");
+
+    if (pinInput) {
+        pinInput.focus();
+    }
+
+});
 
 // ==========================================
 // CEK PIN
@@ -34,37 +50,40 @@ function checkPIN() {
 
     if (enteredPIN === RADV_PIN) {
 
-        // ==================================
-        // PIN BENAR
-        // ==================================
+    // ==================================
+    // PIN BENAR
+    // ==================================
 
-        radVAuthenticated = true;
-
-
-        // Hilangkan layar PIN
-        pinScreen.style.display = "none";
+    radVAuthenticated = true;
 
 
-        if (pinError) {
-            pinError.textContent = "";
-        }
+    // Tutup layar PIN
+    pinScreen.style.display = "none";
 
 
-        pinInput.value = "";
+    // Aktifkan kembali scroll halaman
+    document.body.classList.remove(
+        "pin-locked"
+    );
 
 
-        // ==================================
-        // BARU CONNECT MQTT
-        // ==================================
+    if (pinError) {
 
-        connectMQTT();
+        pinError.textContent = "";
+    }
 
 
-        console.log(
-            "RAD-V: Akses diterima"
-        );
+    pinInput.value = "";
 
-    } else {
+
+    // Baru koneksi MQTT
+    connectMQTT();
+
+
+    console.log(
+        "RAD-V: Akses diterima"
+    );
+} else {
 
         // ==================================
         // PIN SALAH
