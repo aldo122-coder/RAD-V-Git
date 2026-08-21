@@ -1490,15 +1490,26 @@ body.pin-locked {
 }
 
 /* =========================================================
-   FIX REFRESH BUTTON DATA SPREADSHEET - MOBILE
+   FIX TOMBOL REFRESH TABEL MOBILE
 ========================================================= */
 
+.table-refresh {
+    flex-shrink: 0;
+}
+
+
+/* TABLET / MOBILE */
 @media (max-width: 700px) {
 
     .table-header {
-        flex-direction: column;
-        align-items: stretch;
         width: 100%;
+        min-width: 0;
+
+        display: flex;
+        flex-direction: column;
+
+        align-items: stretch;
+        gap: 10px;
     }
 
     .table-header > div {
@@ -1506,10 +1517,37 @@ body.pin-locked {
         min-width: 0;
     }
 
-    .table-header .map-refresh {
+    .table-refresh {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        flex-shrink: 1 !important;
+
+        box-sizing: border-box;
+
+        margin: 0;
+
+        padding: 9px 12px;
+    }
+}
+
+
+/* HP KECIL */
+@media (max-width: 450px) {
+
+    .table-header {
         width: 100%;
         max-width: 100%;
+    }
+
+    .table-refresh {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
         box-sizing: border-box;
-        flex-shrink: 1;
     }
 }
