@@ -824,6 +824,19 @@ async function loadRadiationMap() {
             pointLayer.clearLayers();
         }
 
+// ==========================================
+// HAPUS SEMUA GARIS / POLYLINE
+// ==========================================
+
+radMap.eachLayer(function (layer) {
+
+    if (layer instanceof L.Polyline) {
+
+        radMap.removeLayer(layer);
+
+    }
+
+});
 
 
         /* -----------------------------------------
