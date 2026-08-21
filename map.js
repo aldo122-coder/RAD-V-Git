@@ -788,16 +788,19 @@ async function loadRadiationMap() {
            UPDATE TABLE
         ----------------------------------------- */
 
-        renderSpreadsheetTable(
-            headers,
-            data.table.rows,
-            timestampIndex,
-            latIndex,
-            lonIndex,
-            usvIndex,
-            cpmIndex,
-            points
-        );
+        const rowsTerbaru =
+    [...data.table.rows].reverse();
+
+renderSpreadsheetTable(
+    headers,
+    rowsTerbaru,
+    timestampIndex,
+    latIndex,
+    lonIndex,
+    usvIndex,
+    cpmIndex,
+    points
+);
 
 
         /* -----------------------------------------
@@ -1179,8 +1182,8 @@ function renderSpreadsheetTable(
        ROW
     ----------------------------------------- */
 
-    rows.forEach(
-        (row, rowIndex) => {
+   [...rows].reverse().forEach(
+    (row, rowIndex) => {
 
             const lat =
                 Number(
