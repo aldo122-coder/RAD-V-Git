@@ -270,12 +270,17 @@
     <!-- TABEL DATA SPREADSHEET -->
     <div class="table-section">
         <div class="table-header">
-            <div>
-                <h2>DATA SPREADSHEET RAD-V</h2>
-                <p id="tableInfo">Menunggu data dari Google Spreadsheet...</p>
-            </div>
-            <button class="map-refresh" onclick="loadRadiationMap()">↻ REFRESH</button>
-        </div>
+    <div>
+        <h2>DATA SPREADSHEET RAD-V</h2>
+        <p id="tableInfo">Menunggu data dari Google Spreadsheet...</p>
+    </div>
+
+    <button
+        class="map-refresh table-refresh"
+        onclick="loadRadiationMap()">
+        ↻ REFRESH
+    </button>
+</div>
 
         <div class="table-wrapper">
             <table id="radiationTable">
