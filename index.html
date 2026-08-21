@@ -106,51 +106,56 @@
 
 
     <!-- SAKLAR -->
-    <div class="control-section">
+<div class="control-section">
 
-        <h2>CONTROL</h2>
+    <h2>CONTROL</h2>
 
-        <div class="switch-container">
+    <div class="switch-container">
 
-            <!-- SAKLAR 1 -->
-            <div class="switch-card">
+        <!-- SAKLAR 1 -->
+        <div class="switch-card">
 
-                <div
-                    class="switch"
-                    id="switch1"
-                    onclick="toggleSwitch(1)"
-                >
-                    <div class="switch-circle"></div>
-                </div>
-
-                <div class="switch-status" id="status1">
-                    STOP
-                </div>
-
+            <div
+                class="switch"
+                id="switch1"
+                onclick="toggleSwitch(1)"
+            >
+                <div class="switch-circle"></div>
             </div>
 
+            <div
+                class="switch-status"
+                id="status1"
+            >
+                STOP
+            </div>
 
-            <!-- SAKLAR 2 -->
-            <div class="switch-card">
+        </div>
 
 
-                <div
-                    class="switch"
-                    id="switch2"
-                    onclick="toggleSwitch(2)"
-                >
-                    <div class="switch-circle"></div>
-                </div>
+        <!-- SAKLAR 2 -->
+        <div class="switch-card">
 
-                <div class="switch-status" id="status2">
-                    SELESAI
-                </div>
+            <div
+                class="switch"
+                id="switch2"
+                onclick="toggleSwitch(2)"
+            >
+                <div class="switch-circle"></div>
+            </div>
 
+            <div
+                class="switch-status"
+                id="status2"
+            >
+                SELESAI
             </div>
 
         </div>
 
     </div>
+
+</div>
 
 
     <!-- KONTROL RC -->
@@ -228,21 +233,31 @@
 </div>
 
     <!-- STATUS -->
-    <div class="status-card">
+<div class="status-card">
 
-        <h2>STATUS</h2>
+    <h2>STATUS</h2>
 
-        <div class="status-row">
-            <span>Perintah</span>
-            <strong id="command">STOP</strong>
-        </div>
-
-        <div class="status-row">
-            <span>Status Sistem</span>
-            <strong id="systemStatus">READY</strong>
-        </div>
-
+    <div class="status-row">
+        <span>Perintah</span>
+        <strong id="command">STOP</strong>
     </div>
+
+    <div class="status-row">
+        <span>Status Sistem</span>
+        <strong id="systemStatus">READY</strong>
+    </div>
+
+    <div class="status-row">
+        <span>Pengukuran</span>
+        <strong id="measurementStatus">SELESAI</strong>
+    </div>
+
+    <div class="status-row">
+        <span>Progress</span>
+        <strong id="measurementProgress">-</strong>
+    </div>
+
+</div>
 
 
 
