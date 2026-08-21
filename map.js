@@ -816,24 +816,26 @@ async function loadRadiationMap() {
         }
 
 
-        /* -----------------------------------------
-           CLEAR LAYER
-        ----------------------------------------- */
+/* -----------------------------------------
+   CLEAR MARKER
+----------------------------------------- */
 
-        if (pointLayer) {
-            pointLayer.clearLayers();
-        }
+if (pointLayer) {
+    pointLayer.clearLayers();
+}
 
-// ==========================================
-// HAPUS SEMUA GARIS / POLYLINE
-// ==========================================
+
+/* -----------------------------------------
+   HAPUS SEMUA GARIS LAMA
+----------------------------------------- */
 
 radMap.eachLayer(function (layer) {
 
-    if (layer instanceof L.Polyline) {
-
+    if (
+        layer instanceof L.Polyline &&
+        !(layer instanceof L.CircleMarker)
+    ) {
         radMap.removeLayer(layer);
-
     }
 
 });
