@@ -16,7 +16,6 @@ const REFRESH_INTERVAL = 10000; // 10 detik
 ========================================================= */
 
 let radMap = null;
-let routeLine = null;
 let pointLayer = null;
 let latestMarker = null;
 
@@ -826,15 +825,6 @@ async function loadRadiationMap() {
         }
 
 
-        if (routeLine) {
-
-            radMap.removeLayer(
-                routeLine
-            );
-
-            routeLine = null;
-        }
-
 
         /* -----------------------------------------
            KOORDINAT
@@ -847,23 +837,6 @@ async function loadRadiationMap() {
                     point.lon
                 ]
             );
-
-
-        /* -----------------------------------------
-           ROUTE LINE
-        ----------------------------------------- */
-
-        routeLine =
-            L.polyline(
-                latLngs,
-                {
-                    color: "#2563eb",
-
-                    weight: 4,
-
-                    opacity: 0.7
-                }
-            ).addTo(radMap);
 
 
         /* -----------------------------------------
