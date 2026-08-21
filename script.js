@@ -1555,31 +1555,30 @@ function switch2Selesai() {
 }
 
 // =========================================================
-// KEYBOARD CONTROL
+// KEYBOARD CONTROL RAD-V
+// =========================================================
+
+let keyboardControlActive = null;
+
+
+// =========================================================
+// PEMETAAN KEYBOARD
 // =========================================================
 
 const keyboardCommands = {
 
-    "ArrowUp": "MAJU",
-    "w": "MAJU",
-    "W": "MAJU",
+    KeyW: "MAJU",
+    ArrowUp: "MAJU",
 
-    "ArrowDown": "MUNDUR",
-    "s": "MUNDUR",
-    "S": "MUNDUR",
+    KeyS: "MUNDUR",
+    ArrowDown: "MUNDUR",
 
-    "ArrowLeft": "KIRI",
-    "a": "KIRI",
-    "A": "KIRI",
+    KeyA: "KIRI",
+    ArrowLeft: "KIRI",
 
-    "ArrowRight": "KANAN",
-    "d": "KANAN",
-    "D": "KANAN"
+    KeyD: "KANAN",
+    ArrowRight: "KANAN"
 };
-
-
-// Tombol keyboard yang sedang ditekan
-let keyboardControlActive = null;
 
 
 // =========================================================
@@ -1590,54 +1589,58 @@ document.addEventListener(
     "keydown",
     function (event) {
 
-        // PIN belum benar
+        // =============================================
+        // PIN HARUS SUDAH BENAR
+        // =============================================
+
         if (!radVAuthenticated) {
             return;
         }
 
 
-        // Jangan ganggu input PIN / input lainnya
-        const tag =
-            event.target.tagName;
+        // =============================================
+        // JANGAN AKTIF SAAT MENGETIK
+        // =============================================
 
         if (
-            tag === "INPUT" ||
-            tag === "TEXTAREA" ||
-            tag === "SELECT"
+            event.target.tagName === "INPUT" ||
+            event.target.tagName === "TEXTAREA" ||
+            event.target.tagName === "SELECT"
         ) {
             return;
         }
 
 
-        // =================================================
-        // RTB
-        // =================================================
+        // =============================================
+        // RTB = R
+        // =============================================
 
-        if (
-            event.key === "r" ||
-            event.key === "R"
-        ) {
+        if (event.code === "KeyR") {
 
-            // Jangan berulang ketika R ditahan
+            event.preventDefault();
+
+            // Jangan kirim berulang
             if (event.repeat) {
                 return;
             }
 
-
-            event.preventDefault();
-
+            // RTB menggunakan fungsi yang sudah ada
             sendRTB();
+
+            console.log(
+                "KEYBOARD: RTB"
+            );
 
             return;
         }
 
 
-        // =================================================
-        // MAJU / MUNDUR / KIRI / KANAN
-        // =================================================
+        // =============================================
+        // CARI PERINTAH
+        // =============================================
 
         const command =
-            keyboardCommands[event.key];
+            keyboardCommands[event.code];
 
 
         if (!command) {
@@ -1645,56 +1648,90 @@ document.addEventListener(
         }
 
 
-        // Mencegah browser melakukan scroll
+        // =============================================
+        // CEGAH BROWSER SCROLL
+        // =============================================
+
         event.preventDefault();
 
 
-        // Jangan kirim berulang saat tombol ditahan
+        // =============================================
+        // JANGAN ULANGI SAAT TOMBOL DITAHAN
+        // =============================================
+
         if (event.repeat) {
             return;
         }
 
 
-        // =================================================
-        // CEK KONDISI SISTEM
-        // =================================================
+        // =============================================
+        // CEK PENGUKURAN
+        // =============================================
 
-        if (
-            measurementActive
-        ) {
+        if (measurementActive) {
+
+            console.log(
+                "KEYBOARD LOCK: sedang mengukur"
+            );
 
             return;
         }
 
+
+        // =============================================
+        // SAKLAR 1 HARUS JALAN
+        // =============================================
 
         if (
             switch1State !== "JALAN"
         ) {
 
+            console.log(
+                "KEYBOARD LOCK: Saklar 1 masih STOP"
+            );
+
             return;
         }
 
 
-        // =================================================
-        // KIRIM PERINTAH
-        // =================================================
+        // =============================================
+        // JIKA SUDAH ADA KONTROL AKTIF
+        // =============================================
+
+        if (
+            keyboardControlActive !== null
+        ) {
+
+            return;
+        }
+
+
+        // =============================================
+        // AKTIFKAN KONTROL
+        // =============================================
 
         keyboardControlActive =
             command;
 
 
-        // Buat event palsu agar
-        // menggunakan fungsi pressControl()
-        // yang sama dengan tombol layar
-
+        // Kirim perintah MQTT
         pressControl(
             command,
             null
         );
 
 
-        // Tampilkan tombol aktif
+        // =============================================
+        // TAMPILKAN TOMBOL AKTIF
+        // =============================================
+
         highlightKeyboardButton(
+            command
+        );
+
+
+        console.log(
+            "KEYBOARD:",
             command
         );
     }
@@ -1710,7 +1747,7 @@ document.addEventListener(
     function (event) {
 
         const command =
-            keyboardCommands[event.key];
+            keyboardCommands[event.code];
 
 
         if (!command) {
@@ -1721,8 +1758,10 @@ document.addEventListener(
         event.preventDefault();
 
 
-        // Hanya STOP kalau memang
-        // keyboard sedang mengendalikan
+        // =============================================
+        // HANYA STOP KONTROL YANG SEDANG AKTIF
+        // =============================================
+
         if (
             keyboardControlActive === command
         ) {
@@ -1731,13 +1770,19 @@ document.addEventListener(
 
             keyboardControlActive =
                 null;
+
+
+            console.log(
+                "KEYBOARD STOP:",
+                command
+            );
         }
     }
 );
 
 
 // =========================================================
-// HIGHLIGHT TOMBOL KEYBOARD
+// HIGHLIGHT TOMBOL
 // =========================================================
 
 function highlightKeyboardButton(
@@ -1782,13 +1827,35 @@ function highlightKeyboardButton(
 // =========================================================
 
 // Jika browser kehilangan fokus,
-// kirim STOP agar kendaraan tidak terus bergerak.
+// kendaraan otomatis diperintahkan STOP.
 
 window.addEventListener(
     "blur",
     function () {
 
         if (
+            keyboardControlActive !== null
+        ) {
+
+            releaseControl(null);
+
+            keyboardControlActive =
+                null;
+        }
+    }
+);
+
+
+// =========================================================
+// SAFETY STOP SAAT TAB TIDAK AKTIF
+// =========================================================
+
+document.addEventListener(
+    "visibilitychange",
+    function () {
+
+        if (
+            document.hidden &&
             keyboardControlActive !== null
         ) {
 
