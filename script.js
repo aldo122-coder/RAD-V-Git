@@ -1553,3 +1553,249 @@ function switch2Selesai() {
         );
     }
 }
+
+// =========================================================
+// KEYBOARD CONTROL
+// =========================================================
+
+const keyboardCommands = {
+
+    "ArrowUp": "MAJU",
+    "w": "MAJU",
+    "W": "MAJU",
+
+    "ArrowDown": "MUNDUR",
+    "s": "MUNDUR",
+    "S": "MUNDUR",
+
+    "ArrowLeft": "KIRI",
+    "a": "KIRI",
+    "A": "KIRI",
+
+    "ArrowRight": "KANAN",
+    "d": "KANAN",
+    "D": "KANAN"
+};
+
+
+// Tombol keyboard yang sedang ditekan
+let keyboardControlActive = null;
+
+
+// =========================================================
+// KEY DOWN
+// =========================================================
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        // PIN belum benar
+        if (!radVAuthenticated) {
+            return;
+        }
+
+
+        // Jangan ganggu input PIN / input lainnya
+        const tag =
+            event.target.tagName;
+
+        if (
+            tag === "INPUT" ||
+            tag === "TEXTAREA" ||
+            tag === "SELECT"
+        ) {
+            return;
+        }
+
+
+        // =================================================
+        // RTB
+        // =================================================
+
+        if (
+            event.key === "r" ||
+            event.key === "R"
+        ) {
+
+            // Jangan berulang ketika R ditahan
+            if (event.repeat) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+            sendRTB();
+
+            return;
+        }
+
+
+        // =================================================
+        // MAJU / MUNDUR / KIRI / KANAN
+        // =================================================
+
+        const command =
+            keyboardCommands[event.key];
+
+
+        if (!command) {
+            return;
+        }
+
+
+        // Mencegah browser melakukan scroll
+        event.preventDefault();
+
+
+        // Jangan kirim berulang saat tombol ditahan
+        if (event.repeat) {
+            return;
+        }
+
+
+        // =================================================
+        // CEK KONDISI SISTEM
+        // =================================================
+
+        if (
+            measurementActive
+        ) {
+
+            return;
+        }
+
+
+        if (
+            switch1State !== "JALAN"
+        ) {
+
+            return;
+        }
+
+
+        // =================================================
+        // KIRIM PERINTAH
+        // =================================================
+
+        keyboardControlActive =
+            command;
+
+
+        // Buat event palsu agar
+        // menggunakan fungsi pressControl()
+        // yang sama dengan tombol layar
+
+        pressControl(
+            command,
+            null
+        );
+
+
+        // Tampilkan tombol aktif
+        highlightKeyboardButton(
+            command
+        );
+    }
+);
+
+
+// =========================================================
+// KEY UP
+// =========================================================
+
+document.addEventListener(
+    "keyup",
+    function (event) {
+
+        const command =
+            keyboardCommands[event.key];
+
+
+        if (!command) {
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        // Hanya STOP kalau memang
+        // keyboard sedang mengendalikan
+        if (
+            keyboardControlActive === command
+        ) {
+
+            releaseControl(null);
+
+            keyboardControlActive =
+                null;
+        }
+    }
+);
+
+
+// =========================================================
+// HIGHLIGHT TOMBOL KEYBOARD
+// =========================================================
+
+function highlightKeyboardButton(
+    command
+) {
+
+    const buttons =
+        document.querySelectorAll(
+            ".control-button"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.classList.remove(
+                "active"
+            );
+
+
+            const text =
+                button.innerText
+                    .trim()
+                    .toUpperCase();
+
+
+            if (
+                text.includes(command)
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+            }
+        }
+    );
+}
+
+
+// =========================================================
+// SAFETY STOP
+// =========================================================
+
+// Jika browser kehilangan fokus,
+// kirim STOP agar kendaraan tidak terus bergerak.
+
+window.addEventListener(
+    "blur",
+    function () {
+
+        if (
+            keyboardControlActive !== null
+        ) {
+
+            releaseControl(null);
+
+            keyboardControlActive =
+                null;
+        }
+    }
+);
