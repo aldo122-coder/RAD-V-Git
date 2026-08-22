@@ -1578,3 +1578,631 @@ document.addEventListener(
     "DOMContentLoaded",
     initRadiationMap
 );
+
+/* =========================================================
+   RAD-V PENGUKURAN 10 MENIT
+========================================================= */
+
+let measurementInterval = null;
+let measurementStartTime = null;
+let measurementCount = 0;
+
+const MEASUREMENT_DURATION = 10 * 60 * 1000; // 10 menit
+const MEASUREMENT_INTERVAL = 60 * 1000;      // 1 menit
+
+
+/* =========================================================
+   FORMAT TIMER
+========================================================= */
+
+function formatMeasurementTime(seconds) {
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+    const secs =
+        seconds % 60;
+
+    return (
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(secs).padStart(2, "0")
+    );
+}
+
+
+/* =========================================================
+   UPDATE TIMER
+========================================================= */
+
+function updateMeasurementTimer() {
+
+    const timer =
+        document.getElementById(
+            "measurementTimer"
+        );
+
+    if (!timer || !measurementStartTime) {
+        return;
+    }
+
+    const elapsed =
+        Date.now() -
+        measurementStartTime;
+
+    const seconds =
+        Math.min(
+            Math.floor(elapsed / 1000),
+            600
+        );
+
+    timer.textContent =
+        formatMeasurementTime(seconds);
+}
+
+
+/* =========================================================
+   UPDATE PROGRESS
+========================================================= */
+
+function updateMeasurementProgress() {
+
+    const progressText =
+        document.getElementById(
+            "measurementProgress"
+        );
+
+    const progressBar =
+        document.getElementById(
+            "measurementProgressBar"
+        );
+
+    if (progressText) {
+
+        progressText.textContent =
+            `${measurementCount}/10`;
+    }
+
+    if (progressBar) {
+
+        progressBar.style.width =
+            `${measurementCount * 10}%`;
+    }
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setMeasurementStatus(text) {
+
+    const status =
+        document.getElementById(
+            "measurementStatus"
+        );
+
+    if (status) {
+        status.textContent = text;
+    }
+}
+
+
+/* =========================================================
+   NOTIFIKASI
+========================================================= */
+
+async function showMeasurementNotification(
+    title,
+    message
+) {
+
+    console.log(
+        title,
+        message
+    );
+
+    /* -----------------------------------------
+       Cek dukungan browser
+    ----------------------------------------- */
+
+    if (
+        typeof Notification === "undefined"
+    ) {
+        return;
+    }
+
+
+    /* -----------------------------------------
+       Minta izin
+    ----------------------------------------- */
+
+    if (
+        Notification.permission ===
+        "default"
+    ) {
+
+        try {
+
+            await Notification.requestPermission();
+
+        } catch (error) {
+
+            console.warn(
+                "Izin notifikasi gagal:",
+                error
+            );
+
+        }
+    }
+
+
+    /* -----------------------------------------
+       Tampilkan notifikasi
+    ----------------------------------------- */
+
+    if (
+        Notification.permission ===
+        "granted"
+    ) {
+
+        new Notification(
+            title,
+            {
+                body: message
+            }
+        );
+    }
+}
+
+
+/* =========================================================
+   AMBIL DATA PENGUKURAN
+========================================================= */
+
+async function takeMeasurement() {
+
+    measurementCount++;
+
+    updateMeasurementProgress();
+
+    setMeasurementStatus(
+        `Mengambil data pengukuran ${measurementCount}/10...`
+    );
+
+
+    try {
+
+        /*
+         * Ambil data terbaru dari Spreadsheet
+         */
+
+        const response =
+            await fetch(
+                getGvizUrl(),
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        const text =
+            await response.text();
+
+
+        const data =
+            parseGvizResponse(text);
+
+
+        if (
+            !data.table ||
+            !data.table.rows
+        ) {
+
+            throw new Error(
+                "Data Spreadsheet tidak valid."
+            );
+        }
+
+
+        const totalData =
+            data.table.rows.length;
+
+
+        /*
+         * Data paling akhir
+         */
+
+        const lastRow =
+            data.table.rows[
+                data.table.rows.length - 1
+            ];
+
+
+        /*
+         * Ambil header
+         */
+
+        const headers =
+            data.table.cols.map(
+                col =>
+                    col.label ||
+                    col.id ||
+                    ""
+            );
+
+
+        const timestampIndex =
+            findColumn(
+                headers,
+                [
+                    "timestamp",
+                    "time",
+                    "waktu",
+                    "tanggal",
+                    "date"
+                ]
+            );
+
+
+        const latIndex =
+            findColumn(
+                headers,
+                [
+                    "latitude",
+                    "lat",
+                    "latitude gps",
+                    "gps latitude"
+                ]
+            );
+
+
+        const lonIndex =
+            findColumn(
+                headers,
+                [
+                    "longitude",
+                    "lon",
+                    "lng",
+                    "longitude gps",
+                    "gps longitude"
+                ]
+            );
+
+
+        const usvIndex =
+            findColumn(
+                headers,
+                [
+                    "uSv/h",
+                    "usv/h",
+                    "usv",
+                    "μSv/h",
+                    "µSv/h",
+                    "radiation"
+                ]
+            );
+
+
+        const cpmIndex =
+            findColumn(
+                headers,
+                [
+                    "CPM",
+                    "cpm",
+                    "counts per minute"
+                ]
+            );
+
+
+        const timestamp =
+            formatTimestamp(
+                lastRow,
+                timestampIndex
+            );
+
+
+        const lat =
+            Number(
+                valueFromCell(
+                    lastRow,
+                    latIndex
+                )
+            );
+
+
+        const lon =
+            Number(
+                valueFromCell(
+                    lastRow,
+                    lonIndex
+                )
+            );
+
+
+        const usv =
+            Number(
+                valueFromCell(
+                    lastRow,
+                    usvIndex
+                )
+            );
+
+
+        const cpm =
+            Number(
+                valueFromCell(
+                    lastRow,
+                    cpmIndex
+                )
+            );
+
+
+        /*
+         * Status
+         */
+
+        setMeasurementStatus(
+            `Data ${measurementCount}/10 berhasil diambil | ` +
+            `Data Spreadsheet: ${totalData}`
+        );
+
+
+        /*
+         * Notifikasi
+         */
+
+        await showMeasurementNotification(
+            "☢️ RAD-V",
+            `Data pengukuran ${measurementCount}/10 berhasil diambil.` +
+            `\nWaktu: ${timestamp}` +
+            `\nμSv/h: ${
+                Number.isFinite(usv)
+                    ? usv.toFixed(4)
+                    : "-"
+            }` +
+            `\nCPM: ${
+                Number.isFinite(cpm)
+                    ? cpm.toFixed(2)
+                    : "-"
+            }`
+        );
+
+
+        console.log(
+            "RAD-V Measurement:",
+            {
+                nomor: measurementCount,
+                timestamp: timestamp,
+                latitude: lat,
+                longitude: lon,
+                usv: usv,
+                cpm: cpm
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Measurement Error:",
+            error
+        );
+
+
+        setMeasurementStatus(
+            `Gagal mengambil data ${measurementCount}/10`
+        );
+
+
+        await showMeasurementNotification(
+            "⚠️ RAD-V",
+            `Gagal mengambil data pengukuran ${measurementCount}/10.`
+        );
+    }
+
+
+    /*
+     * Selesai 10/10
+     */
+
+    if (measurementCount >= 10) {
+
+        finishMeasurement();
+    }
+}
+
+
+/* =========================================================
+   SELESAI PENGUKURAN
+========================================================= */
+
+function finishMeasurement() {
+
+    if (measurementInterval) {
+
+        clearInterval(
+            measurementInterval
+        );
+
+        measurementInterval = null;
+    }
+
+
+    const button =
+        document.getElementById(
+            "startMeasurementButton"
+        );
+
+
+    setMeasurementStatus(
+        "✅ Pengukuran selesai — 10/10 data telah diambil."
+    );
+
+
+    if (button) {
+
+        button.disabled = false;
+
+        button.textContent =
+            "🔄 MULAI PENGUKURAN LAGI";
+    }
+
+
+    showMeasurementNotification(
+        "☢️ RAD-V",
+        "Pengukuran 10 menit selesai. 10/10 data telah diambil."
+    );
+}
+
+
+/* =========================================================
+   MULAI PENGUKURAN
+========================================================= */
+
+async function startMeasurement() {
+
+    /*
+     * Jika sedang berjalan jangan mulai lagi
+     */
+
+    if (measurementInterval) {
+        return;
+    }
+
+
+    measurementCount = 0;
+
+    measurementStartTime =
+        Date.now();
+
+
+    const button =
+        document.getElementById(
+            "startMeasurementButton"
+        );
+
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            "⏳ PENGUKURAN BERJALAN...";
+    }
+
+
+    updateMeasurementProgress();
+
+    setMeasurementStatus(
+        "Pengukuran dimulai..."
+    );
+
+
+    /*
+     * Timer
+     */
+
+    updateMeasurementTimer();
+
+
+    const timerInterval =
+        setInterval(
+            () => {
+
+                updateMeasurementTimer();
+
+                if (
+                    !measurementInterval &&
+                    measurementCount >= 10
+                ) {
+
+                    clearInterval(
+                        timerInterval
+                    );
+                }
+
+            },
+            1000
+        );
+
+
+    /*
+     * Ambil data pertama sekarang
+     */
+
+    await takeMeasurement();
+
+
+    /*
+     * Kalau sudah selesai
+     */
+
+    if (measurementCount >= 10) {
+
+        clearInterval(
+            timerInterval
+        );
+
+        return;
+    }
+
+
+    /*
+     * Ambil data setiap 1 menit
+     */
+
+    measurementInterval =
+        setInterval(
+            async () => {
+
+                await takeMeasurement();
+
+                if (
+                    measurementCount >= 10
+                ) {
+
+                    clearInterval(
+                        timerInterval
+                    );
+                }
+
+            },
+            MEASUREMENT_INTERVAL
+        );
+}
+
+
+/* =========================================================
+   TOMBOL MULAI
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const button =
+            document.getElementById(
+                "startMeasurementButton"
+            );
+
+        if (!button) {
+            return;
+        }
+
+
+        button.addEventListener(
+            "click",
+            startMeasurement
+        );
+
+    }
+);
