@@ -2,7 +2,7 @@
 // RAD-V PIN SECURITY
 // =========================================================
 
-const RADV_PIN = "1234";
+const RADV_PIN = "kinong123";
 
 let radVAuthenticated = false;
 
