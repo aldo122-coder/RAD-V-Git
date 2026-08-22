@@ -793,7 +793,7 @@ async function loadRadiationMap() {
 
 renderSpreadsheetTable(
     headers,
-    rowsTerbaru,
+    data.table.rows,
     timestampIndex,
     latIndex,
     lonIndex,
@@ -1182,9 +1182,15 @@ function renderSpreadsheetTable(
        ROW
     ----------------------------------------- */
 
-   [...rows].reverse().forEach(
-    (row, rowIndex) => {
-
+   rows
+    .map((row, originalIndex) => ({
+        row: row,
+        originalIndex: originalIndex
+    }))
+    .reverse()
+    .forEach(
+        ({ row, originalIndex }, displayIndex) => {
+           
             const lat =
                 Number(
                     valueFromCell(
@@ -1222,11 +1228,11 @@ function renderSpreadsheetTable(
 
 
             const point =
-                window.radVPointByRowIndex
-                    ? window.radVPointByRowIndex[
-                        rowIndex
-                    ]
-                    : null;
+    window.radVPointByRowIndex
+        ? window.radVPointByRowIndex[
+            originalIndex
+        ]
+        : null;
 
 
             const latestPoint =
@@ -1358,7 +1364,7 @@ if (colIndex === timestampIndex) {
             tr.innerHTML = `
 
                 <td>
-                    ${rowIndex + 1}
+                   ${displayIndex + 1}
                 </td>
 
                 ${values}
