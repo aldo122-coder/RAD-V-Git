@@ -310,6 +310,51 @@
 
     <h2>DATA</h2>
 
+        <!-- ================================= -->
+    <!-- PANEL PENGUKURAN RAD-V -->
+    <!-- ================================= -->
+
+    <div class="measurement-panel">
+
+        <h2>☢️ PENGUKURAN RAD-V</h2>
+
+        <div
+            class="measurement-timer"
+            id="measurementTimer">
+            00:00
+        </div>
+
+        <div
+            class="measurement-progress-text"
+            id="measurementProgress">
+            0/10
+        </div>
+
+        <div class="measurement-progress-bar">
+
+            <div
+                id="measurementProgressBar"
+                class="measurement-progress-fill"
+                style="width: 0%;">
+            </div>
+
+        </div>
+
+        <div
+            id="measurementStatus"
+            class="measurement-status">
+            Siap memulai pengukuran
+        </div>
+
+        <button
+            type="button"
+            id="startMeasurementButton"
+            class="measurement-start-button">
+            ▶ MULAI PENGUKURAN
+        </button>
+
+    </div>
+        
     <button
         class="link-button spreadsheet"
         onclick="window.open(
