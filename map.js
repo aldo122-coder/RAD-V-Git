@@ -366,7 +366,84 @@ function formatTimestamp(row, index) {
     return text;
 }
 
+function getTimestampMs(row, index) {
 
+    if (
+        !row ||
+        !row.c ||
+        index < 0 ||
+        !row.c[index]
+    ) {
+        return 0;
+    }
+
+    const cell = row.c[index];
+
+    const value = cell.v;
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return 0;
+    }
+
+    const text = String(value).trim();
+
+    // Format Google GViz:
+    // Date(2026,7,22,2,29,22)
+
+    const match = text.match(
+        /^Date\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/
+    );
+
+    if (match) {
+
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const hour = Number(match[4]);
+        const minute = Number(match[5]);
+        const second = Number(match[6]);
+
+        return new Date(
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second
+        ).getTime();
+    }
+
+    // Format:
+    // 22/08/2026 02:29:22
+
+    const normalMatch = text.match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+    );
+
+    if (normalMatch) {
+
+        const day = Number(normalMatch[1]);
+        const month = Number(normalMatch[2]) - 1;
+        const year = Number(normalMatch[3]);
+        const hour = Number(normalMatch[4]);
+        const minute = Number(normalMatch[5]);
+        const second = Number(normalMatch[6]);
+
+        return new Date(
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second
+        ).getTime();
+    }
+
+    return 0;
+}
 
 /* =========================================================
    FORMAT CELL
@@ -788,10 +865,7 @@ async function loadRadiationMap() {
            UPDATE TABLE
         ----------------------------------------- */
 
-        const rowsTerbaru =
-    [...data.table.rows].reverse();
-
-renderSpreadsheetTable(
+   renderSpreadsheetTable(
     headers,
     data.table.rows,
     timestampIndex,
@@ -1178,88 +1252,105 @@ function renderSpreadsheetTable(
     }
 
 
-    /* -----------------------------------------
-       ROW
-    ----------------------------------------- */
+   /* -----------------------------------------
+   ROW - DATA TERBARU DI ATAS
+   ----------------------------------------- */
 
-   rows
-    .map((row, originalIndex) => ({
-        row: row,
-        originalIndex: originalIndex
-    }))
-    .reverse()
-    .forEach(
-        ({ row, originalIndex }, displayIndex) => {
-           
-            const lat =
-                Number(
-                    valueFromCell(
-                        row,
-                        latIndex
-                    )
-                );
+const sortedRows =
+    rows
+        .map((row, originalIndex) => ({
 
+            row: row,
 
-            const lon =
-                Number(
-                    valueFromCell(
-                        row,
-                        lonIndex
-                    )
-                );
+            originalIndex: originalIndex,
+
+            timestamp:
+                getTimestampMs(
+                    row,
+                    timestampIndex
+                )
+
+        }))
+        .sort(
+            (a, b) =>
+                b.timestamp - a.timestamp
+        );
 
 
-            const usv =
-                Number(
-                    valueFromCell(
-                        row,
-                        usvIndex
-                    )
-                );
+sortedRows.forEach(
+    ({ row, originalIndex }, displayIndex) => {
+
+        const lat =
+            Number(
+                valueFromCell(
+                    row,
+                    latIndex
+                )
+            );
 
 
-            const cpm =
-                Number(
-                    valueFromCell(
-                        row,
-                        cpmIndex
-                    )
-                );
+        const lon =
+            Number(
+                valueFromCell(
+                    row,
+                    lonIndex
+                )
+            );
 
 
-            const point =
-    window.radVPointByRowIndex
-        ? window.radVPointByRowIndex[
-            originalIndex
-        ]
-        : null;
+        const usv =
+            Number(
+                valueFromCell(
+                    row,
+                    usvIndex
+                )
+            );
 
 
-            const latestPoint =
-                points.length
-                    ? points[points.length - 1]
-                    : null;
+        const cpm =
+            Number(
+                valueFromCell(
+                    row,
+                    cpmIndex
+                )
+            );
 
 
-            const isLatest =
-                point &&
-                latestPoint &&
-                point === latestPoint;
+        const point =
+            window.radVPointByRowIndex
+                ? window.radVPointByRowIndex[
+                    originalIndex
+                ]
+                : null;
 
 
-            const level =
-                radiationLevel(usv);
+        const latestPoint =
+            points.length
+                ? points[points.length - 1]
+                : null;
 
 
-            const tr =
-                document.createElement("tr");
+        const isLatest =
+            point &&
+            latestPoint &&
+            point === latestPoint;
 
 
-            if (isLatest) {
-                tr.classList.add(
-                    "latest-row"
-                );
-            }
+        const level =
+            radiationLevel(usv);
+
+
+        const tr =
+            document.createElement("tr");
+
+
+        if (isLatest) {
+
+            tr.classList.add(
+                "latest-row"
+            );
+
+        }
 
 
             /* -----------------------------------------
